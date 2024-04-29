@@ -2,10 +2,16 @@
     <div>
       <div class="p-5">
         <div class="container">
-          <div class="box">
-            <h3>date</h3>
-            <input type="text" class="datepicker-here form-control" id="minMaxExample" data-date-format="dd/mm/yyyy" data-language='en' placeholder="seléctionner une date">
-			<DatePicker/>
+          <div class="box d-flex">
+			      <input type="search" class="form-control " value="Nom du fichier">
+			      <input type="date" class="form-control" name="ad" id="">
+            <select class="form-select" aria-label="Default select example">
+            <option selected>category</option>
+            <option value="1">One</option>
+            <option value="2">Two</option>
+            <option value="3">Three</option>
+            </select>
+            <input type="submit" class="form-control" value="rechercher">
           </div>
         </div>
       </div>
@@ -13,8 +19,6 @@
   </template>
   
   <script setup lang="ts">
-
-const date = ref(new Date())
 </script>
 
 
@@ -23,7 +27,7 @@ const date = ref(new Date())
 <style lang="scss" scoped>
 
 .container{
-	max-width: 600px;
+	
 }
 .box{
 	padding: 50px;
