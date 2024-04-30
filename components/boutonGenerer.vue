@@ -1,7 +1,7 @@
 <template>
     <div>
         <button class="btn btn-outline-secondary validerCouleur" @click="myTest" type="button" id="inputGroupFileAddon04">
-            Valider
+            Générer Fichier
           </button>
     </div>
 </template>
@@ -11,7 +11,7 @@ export default {
     name: "boutonValider",
     methods: {
     myTest() {
-      alert("valide avec succés");
+      alert("Génrer avec succés");
     },
   },
 }
@@ -22,9 +22,11 @@ export default {
 .validerCouleur{
   color: white;
   background-color: rgb(0, 0, 0);
+  
 }
 .validerCouleur:hover{
   color: black;
   background-color: white;
 }
+    
 </style>
