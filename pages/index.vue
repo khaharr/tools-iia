@@ -1,5 +1,4 @@
 <template>
-  <form class="was-validated">
 
   <div class="bgg">
     <div>
@@ -7,12 +6,15 @@
         <div class="container">
           <div class="box ">
             <!-- Champ de recherche par nom de fichier -->
-            <div class="input-container">
-              <input  type="search" class="form-control" v-model="searchTerm"  placeholder="Nom du fichier" required >
-              <div class="invalid-feedback fixer">mettre un nom de fichier</div>
-              
-              <div class="loader" v-show="searching"></div> <!-- Loader pour simuler le chargement -->
+          <div class="input-container">
+            <input type="search" class="form-control" v-model="searchTerm" placeholder="Nom du fichier" >
+            <!-- Message d'erreur en dessous du champ de recherche -->
+            <div class="error-message" v-if="searchTerm.length > 0 && searchTerm.length < 3">
+              Veuillez saisir au moins 3 caractères.
             </div>
+            <div class="loader" v-show="searching"></div> <!-- Loader pour simuler le chargement -->
+          </div>
+
             
              <!-- Champ de sélection de catégorie -->
              <div class="input-container">
@@ -66,7 +68,6 @@
     <div >
 
     </div>
-</form>
 </template>
 
 <script setup>
@@ -93,10 +94,10 @@ const searching = ref(false);
 const filteredItems = computed(() => {
   let filtered = items;
   //condition pour la barre de rechercche fait dynmiquement avec la fonctionalité filter qui permet de renvoyer un tableau d'elt qui s'actualise dynamiquement
+  
+  
 
-  if (searchTerm.value.trim() !== '') {
-    filtered = filtered.filter(item => item.nomfichier.toLocaleLowerCase().includes(searchTerm.value.toLocaleLowerCase()));
-  }
+  
 
   if (selectedDate.value !== '') {
     filtered = filtered.filter(item => item.date === selectedDate.value);
@@ -111,6 +112,14 @@ const filteredItems = computed(() => {
   //     alert(' cest vide ...')
   //  }, 1000); 
   // };
+  
+  if (searchTerm.value.trim().length < 3) {
+    
+    return filtered;
+  } 
+  if (searchTerm.value.trim() !== '') {
+    filtered = filtered.filter(item => item.nomfichier.toLocaleLowerCase().includes(searchTerm.value.toLocaleLowerCase()));
+  }
 
   return filtered;
 });
@@ -191,6 +200,12 @@ const uniqueCategories = computed(() =>
   width: 100vw;
   border-collapse: collapse;
 
+}
+.error-message {
+  color: #ff8458; /* Orange */
+  font-size: 14px;
+  margin-top: 5px;
+  position: fixed;
 }
 
 th, td {
