@@ -28,7 +28,13 @@
 
             <!-- Champ de sélection de date -->
             <div class="input-container">
-              <input type="date" class="form-control" v-model="selectedDate">
+              <label for="start-date">Début :</label>
+              <input id="start-date" type="date" class="form-control" v-model="startDate">
+              <div class="loader" v-show="searching"></div> <!-- Loader pour simuler le chargement -->
+            </div>
+            <div class="input-container">
+              <label for="end-date">Fin :</label>
+              <input id="end-date" type="date" class="form-control" v-model="endDate">
               <div class="loader" v-show="searching"></div> <!-- Loader pour simuler le chargement -->
             </div>
           </div>
@@ -63,10 +69,7 @@
   </tr>
 </tbody>
       </table>
-    </div class="generate">
       <BoutonGenerer/>
-    <div >
-
     </div>
 </template>
 
@@ -76,7 +79,7 @@ const items = [
   { nomfichier: 'Mark', category: 'Otto', date: '2024-04-29' },
   { nomfichier: 'Jacob', category: 'Thornton', date: '2023-09-10' },
   { nomfichier: 'Larry', category: 'the Bird', date: '2005-08-12' },
-  { nomfichier: 'Larry', category: 'the Bird', date: '2005-08-12' },
+  { nomfichier: 'Larry', category: 'the Bird', date: '2005-08-10' },
   { nomfichier: 'Larry', category: 'the Bird', date: '2005-08-12' },
   { nomfichier: 'Larry', category: 'the Bird', date: '2005-08-12' },
   { nomfichier: 'Larry', category: 'the Bird', date: '2005-08-12' },
@@ -89,7 +92,8 @@ const searchTerm = ref('');
 const selectedCategory = ref('');
 const selectedDate = ref('');
 const searching = ref(false);
-
+const startDate = ref('');
+const endDate = ref('');
 // Fonction de filtrage des éléments
 const filteredItems = computed(() => {
   let filtered = items;
@@ -97,7 +101,15 @@ const filteredItems = computed(() => {
   
   
 
-  
+  if (startDate.value !== '' && endDate.value !== ''){
+    filtered = filtered.filter(item => {
+
+        const itemDate = new Date(item.date);
+        const start = new Date(startDate.value);
+        const end = new Date(endDate.value);
+        return itemDate >= start && itemDate <= end;
+    });
+  }
 
   if (selectedDate.value !== '') {
     filtered = filtered.filter(item => item.date === selectedDate.value);
