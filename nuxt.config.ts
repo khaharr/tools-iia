@@ -3,6 +3,7 @@ export default defineNuxtConfig({
   ssr:false,
   css: ["bootstrap/dist/css/bootstrap.min.css",
   "bootstrap-icons/font/bootstrap-icons.min.css",
+  "bootstrap-table/dist/bootstrap-table.min.css"
   ], // add
   vite: {
     define: {
