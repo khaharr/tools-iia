@@ -18,47 +18,104 @@
         <thead class="table-dark">
           <tr>
             <th data-checkbox="true">id</th>
-            <th
-              data-field="nomfichier"
-              data-searchable="true"
-              data-click-to-select="true"
-              data-formatter="headerFormatter"
-            >
-              nom fichier
-            </th>
+            <th data-field="nomfichier" data-searchable="true" data-click-to-select="true">nom fichier</th>
             <th data-field="category" data-filter-control="select" data-searchable="false">category</th>
             <th data-field="date" data-sortable="true" data-searchable="false">date mise en ligne</th>
           </tr>
         </thead>
       </table>
     </div>
-    <BoutonGenerer />
+    <BoutonGenerer @click="generateFile" />
   </div>
 </template>
 
 <script >
-import { ref, onMounted } from 'vue'
-import useBdd from '~/composables/useBdd'
+ export default {
+  data() {
+    return {
+      selectedRows: [],
+      items: [
+        { nomfichier: "benjamin", category: "the Bird", date: "2005-08-12" },
+        { nomfichier: "benjamin", category: "the Bird", date: "2005-08-12" },
+        { nomfichier: "benjamin", category: "the Bird", date: "2005-08-10" },
+        { nomfichier: "benjamin", category: "the Bird", date: "2005-08-12" },
+        { nomfichier: "Larry", category: "the Bird", date: "2005-08-12" },
+        { nomfichier: "lolo", category: "the Bird", date: "2005-08-12" },
+        { nomfichier: "lolo", category: "the Bird", date: "2005-08-10" },
+        { nomfichier: "lolo", category: "the Bird", date: "2005-08-12" },
+        { nomfichier: "Larry", category: "the Bird", date: "2005-08-12" },
+        { nomfichier: "khalid", category: "the Bird", date: "2005-08-12" },
+        { nomfichier: "Larry", category: "the Bird", date: "2005-08-10" },
+        { nomfichier: "Larry", category: "the Bird", date: "2005-08-12" },
+        { nomfichier: "Larry", category: "the Bird", date: "2005-08-12" },
+        { nomfichier: "benjamin", category: "the Bird", date: "2005-08-12" },
+      ]
+    }
+  },
+  mounted() {
+    $(document).ready(() => {
+      const table = $("#table");
+      table.bootstrapTable({
+        data: this.items,
+        onCheck: (row) => {
+          this.selectedRows.push(row);
+        },
+        onUncheck: (row) => {
+          const index = this.selectedRows.indexOf(row);
+          if (index!== -1) {
+            this.selectedRows.splice(index, 1);
+          }
+        }
+      });
+    });
+  },
+  methods: {
+    generateFile() {
+      console.log(this.selectedRows);
+      //  generer  fichier ici
+    
+    }
+  }
+}
+  
+// import { ref, onMounted } from 'vue'
+// import useBdd from '~/composables/useBdd'
 
-const data = ref<{ id: number, nomfichier: string, category: string, date: string }>([])
+// const data = ref<{ id: number, nomfichier: string, category: string, date: string }>([])
 
-onMounted(async () => {
-  data.value = await useBdd().fetchAllData()
-})
+// onMounted(async () => {
+//   data.value = await useBdd().fetchAllData()
+// })
 
 // permet d'afficher les items dans le tableau
 $(document).ready(() => {
   const table = $("#table");
-  table.bootstrapTable({ data: data.value });
+  table.bootstrapTable({ data: items });
 });
 
-export async function headerFormatter(value, row, index) {
-  const formattedValue = await fetchData(`SELECT * FROM nom_fichier WHERE nomfichier = '${value}'`).then((res) => {
-    return res[0].nomfichier
-  })
+  //permet d'avoir  toutes les valeurs du tableau
+  // const els = document.querySelectorAll("table thead th")
+  // console.log(els)
+  // const myObjEntete = []
+  // for (let i = 0; i < els.length; i++) {
+  //   myObjEntete.push(els[i].getAttribute("data-field"))
+  // }
+  // console.log(myObjEntete)
+  // const trs = document.querySelectorAll("table tbody tr")
+  // trs.forEach((tr) => {
+  //   const tds = tr.querySelectorAll("td")
+  //   tds.forEach((td) => {
+  //     console.log(td.innerHTML)
+  //   });
+  // });
 
-  return `${formattedValue} (id: ${index + 1})`
-}
+// export async function headerFormatter(value, row, index) {
+//   const formattedValue = await fetchData(`SELECT * FROM nom_fichier WHERE nomfichier = '${value}'`).then((res) => {
+//     return res[0].nomfichier
+//   })
+
+//   return `${formattedValue} (id: ${index + 1})`
+// }
 </script>
 
 
@@ -80,8 +137,7 @@ export async function headerFormatter(value, row, index) {
 .error {
   color: #d30000;
 }
-.form-control {
-}
+
 
 .bgg {
   background-color: #ddd0c8;
