@@ -11,5 +11,7 @@ const client = new Client({
   password: 'postgres',
 })
   await client.connect() 
-  return(useBdd.fetchAllData(Client))
+
+  return(useBdd.fetchAllData(client))
 })
+
