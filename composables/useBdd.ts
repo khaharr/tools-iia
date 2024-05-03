@@ -1,15 +1,14 @@
-
- export default  useBdd = {
-  async function fetchAllData(bdd) {
+export  const useBdd = {
+  async  fetchAllData(bdd) {
     try {
        const result = await bdd.query('SELECT * FROM nom_fichier')
-       data.value = result.rows.map((row: any) => ({
+       const data = result.rows.map((row: any) => ({
          id: row.id,
          nomfichier: row.nomfichier,
          category: row.category,
          date: row.date,
        }))
-       return data.value
+       return data
      } 
      catch (error) {
        console.error(error)
@@ -17,7 +16,7 @@
      }
    },
 
-   async function fetchData(query: string) {
+   async  fetchData(bdd,query: string) {
      try {
        const result = await bdd.query(query)
        return result.rows
@@ -26,10 +25,5 @@
        console.error(error)
        return []
      }
-   },
-
-   return {
-     fetchAllData,
-     fetchData,
    }
  }
