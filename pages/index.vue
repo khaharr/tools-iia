@@ -30,30 +30,18 @@
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
+import { useBdd } from '~/composables/useBdd'
 
 const selectedRows = []
-const items = [
-  { nomfichier: "benjamin", category: "the Bird", date: "2005-08-12" },
-  { nomfichier: "benjamin", category: "the Bird", date: "2005-08-12" },
-  { nomfichier: "benjamin", category: "the Bird", date: "2005-08-10" },
-  { nomfichier: "benjamin", category: "the Bird", date: "2005-08-12" },
-  { nomfichier: "Larry", category: "the Bird", date: "2005-08-12" },
-  { nomfichier: "lolo", category: "the Bird", date: "2005-08-12" },
-  { nomfichier: "lolo", category: "the Bird", date: "2005-08-10" },
-  { nomfichier: "lolo", category: "the Bird", date: "2005-08-12" },
-  { nomfichier: "Larry", category: "the Bird", date: "2005-08-12" },
-  { nomfichier: "khalid", category: "the Bird", date: "2005-08-12" },
-  { nomfichier: "Larry", category: "the Bird", date: "2005-08-10" },
-  { nomfichier: "Larry", category: "the Bird", date: "2005-08-12" },
-  { nomfichier: "Larry", category: "the Bird", date: "2005-08-12" },
-  { nomfichier: "benjamin", category: "the Bird", date: "2005-08-12" },
-];
+const items = ref([])
 
-onMounted(() => {
+onMounted(async () => {
+  const data = await useBdd.fetchAllData()
+  items.value = data
   const table = $("#table");
   table.bootstrapTable({
-    data: items,
+    data: items.value,
     onCheck: (row) => {
       selectedRows.push(row);
     },
@@ -71,7 +59,6 @@ const generateFile = () => {
   // Générez le fichier ici
 }
 </script>
-
 
 <style lang="scss" scoped>
 .fixer {
