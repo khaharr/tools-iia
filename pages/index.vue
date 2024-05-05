@@ -29,93 +29,47 @@
   </div>
 </template>
 
-<script >
- export default {
-  data() {
-    return {
-      selectedRows: [],
-      items: [
-        { nomfichier: "benjamin", category: "the Bird", date: "2005-08-12" },
-        { nomfichier: "benjamin", category: "the Bird", date: "2005-08-12" },
-        { nomfichier: "benjamin", category: "the Bird", date: "2005-08-10" },
-        { nomfichier: "benjamin", category: "the Bird", date: "2005-08-12" },
-        { nomfichier: "Larry", category: "the Bird", date: "2005-08-12" },
-        { nomfichier: "lolo", category: "the Bird", date: "2005-08-12" },
-        { nomfichier: "lolo", category: "the Bird", date: "2005-08-10" },
-        { nomfichier: "lolo", category: "the Bird", date: "2005-08-12" },
-        { nomfichier: "Larry", category: "the Bird", date: "2005-08-12" },
-        { nomfichier: "khalid", category: "the Bird", date: "2005-08-12" },
-        { nomfichier: "Larry", category: "the Bird", date: "2005-08-10" },
-        { nomfichier: "Larry", category: "the Bird", date: "2005-08-12" },
-        { nomfichier: "Larry", category: "the Bird", date: "2005-08-12" },
-        { nomfichier: "benjamin", category: "the Bird", date: "2005-08-12" },
-      ]
-    }
-  },
-  mounted() {
-    $(document).ready(() => {
-      const table = $("#table");
-      table.bootstrapTable({
-        data: this.items,
-        onCheck: (row) => {
-          this.selectedRows.push(row);
-        },
-        onUncheck: (row) => {
-          const index = this.selectedRows.indexOf(row);
-          if (index!== -1) {
-            this.selectedRows.splice(index, 1);
-          }
-        }
-      });
-    });
-  },
-  methods: {
-    generateFile() {
-      console.log(this.selectedRows);
-      //  generer  fichier ici
-    
-    }
-  }
-}
-  
-// import { ref, onMounted } from 'vue'
-// import useBdd from '~/composables/useBdd'
+<script setup>
+import { onMounted } from 'vue'
 
-// const data = ref<{ id: number, nomfichier: string, category: string, date: string }>([])
+const selectedRows = []
+const items = [
+  { nomfichier: "benjamin", category: "the Bird", date: "2005-08-12" },
+  { nomfichier: "benjamin", category: "the Bird", date: "2005-08-12" },
+  { nomfichier: "benjamin", category: "the Bird", date: "2005-08-10" },
+  { nomfichier: "benjamin", category: "the Bird", date: "2005-08-12" },
+  { nomfichier: "Larry", category: "the Bird", date: "2005-08-12" },
+  { nomfichier: "lolo", category: "the Bird", date: "2005-08-12" },
+  { nomfichier: "lolo", category: "the Bird", date: "2005-08-10" },
+  { nomfichier: "lolo", category: "the Bird", date: "2005-08-12" },
+  { nomfichier: "Larry", category: "the Bird", date: "2005-08-12" },
+  { nomfichier: "khalid", category: "the Bird", date: "2005-08-12" },
+  { nomfichier: "Larry", category: "the Bird", date: "2005-08-10" },
+  { nomfichier: "Larry", category: "the Bird", date: "2005-08-12" },
+  { nomfichier: "Larry", category: "the Bird", date: "2005-08-12" },
+  { nomfichier: "benjamin", category: "the Bird", date: "2005-08-12" },
+];
 
-// onMounted(async () => {
-//   data.value = await useBdd().fetchAllData()
-// })
-
-// permet d'afficher les items dans le tableau
-$(document).ready(() => {
+onMounted(() => {
   const table = $("#table");
-  table.bootstrapTable({ data: items });
+  table.bootstrapTable({
+    data: items,
+    onCheck: (row) => {
+      selectedRows.push(row);
+    },
+    onUncheck: (row) => {
+      const index = selectedRows.indexOf(row);
+      if (index !== -1) {
+        selectedRows.splice(index, 1);
+      }
+    }
+  });
 });
 
-  //permet d'avoir  toutes les valeurs du tableau
-  // const els = document.querySelectorAll("table thead th")
-  // console.log(els)
-  // const myObjEntete = []
-  // for (let i = 0; i < els.length; i++) {
-  //   myObjEntete.push(els[i].getAttribute("data-field"))
-  // }
-  // console.log(myObjEntete)
-  // const trs = document.querySelectorAll("table tbody tr")
-  // trs.forEach((tr) => {
-  //   const tds = tr.querySelectorAll("td")
-  //   tds.forEach((td) => {
-  //     console.log(td.innerHTML)
-  //   });
-  // });
-
-// export async function headerFormatter(value, row, index) {
-//   const formattedValue = await fetchData(`SELECT * FROM nom_fichier WHERE nomfichier = '${value}'`).then((res) => {
-//     return res[0].nomfichier
-//   })
-
-//   return `${formattedValue} (id: ${index + 1})`
-// }
+const generateFile = () => {
+  console.log(selectedRows);
+  // Générez le fichier ici
+}
 </script>
 
 
