@@ -30,42 +30,5 @@ export default {
 </script>
 
 <style lang="css" scoped>
-.tailleIcone {
-    height: 16px;
-    width: 16px;
-}
 
-.navText {
-    text-decoration: none;
-    border-width: 1px;
-    border-radius: 30px;
-    display: flex;
-  
-    background-color: #000000;
-  
-}
-
-.navText:hover {
-    background-color: #ffffff;
-
-    border-radius: 50px;
-}
-
-.fond {
-    background-color: #ddd0c8;
-}
-
-.couleurTexte {
-    color: white;
-}
-
-.couleurTexte:hover{
-color: #000000;
-}
-
-#icon {
-    fill: rgb(107, 107, 107);
-    width: 30px;
-    height: 30px;
-}
 </style>
