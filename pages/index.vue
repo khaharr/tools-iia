@@ -2,25 +2,25 @@
   <div class="search-container">
     <div class="search-header">
       <h1> télechargement de fichiers</h1>
-      <h4 class="filter-title">filtre de recherche <i class="bi bi-search"></i></h4>
+      <h4 class="filter-title ">filtre de recherche <i class="bi bi-search"></i></h4>
     </div>
     <div class="search-filters">
       <div class="row justify-content-center">
         <div class="col-2">
           <label for="dateFrom" class="form-label">Date de début :</label>
-          <input type="date" class="form-control" id="dateFrom" v-model="dateFrom">
+          <input type="date" class="form-control" id="dateFrom" v-model="dateFrom" @change="applyDateFilter">
         </div>
         <div class="col-2">
           <label for="dateTo" class="form-label">Date de fin :</label>
-          <input type="date" class="form-control" id="dateTo" v-model="dateTo">
+          <input type="date" class="form-control" id="dateTo" v-model="dateTo" @change="applyDateFilter">
         </div>
         <div class="col-2">
-        <button class="btn btn-outline-secondary form-control validerCouleur" @click="generateFile" type="button" id="inputGroupFileAddon04">
-            Générer Fichier
-          </button></div>
+
+        </div>
       </div>
     </div>
-    <div>
+    <div class="w-75 m-auto">
+      
       <table
         id="table"
         data-toggle="table"
@@ -29,7 +29,6 @@
         data-cookie-id-table="saveId"
         data-filter-control="true"
         data-click-to-select="true"
-        data-search = "true"
       >
         <thead class="table-dark">
           <tr>
@@ -44,7 +43,7 @@
     </div>
     <div class="position-absolute  start-50 translate-middle" >
       <div>
-        <button class="btn btn-outline-secondary validerCouleur" @click="generateFile" type="button" id="inputGroupFileAddon04">
+        <button class="btn btn-primary validerCouleur" @click="generateFile" type="button" id="inputGroupFileAddon04">
             Générer Fichier
           </button>
     </div>
@@ -63,7 +62,7 @@ const dateTo = ref(null)
 
 // fonction date filtre
 const filteredItems = computed(() => {
-  return items.value.filter(item => {
+  return items.value.data.filter(item => {
     const itemDate = new Date(item.date)
     if (!dateFrom.value || !dateTo.value) {
       return true
@@ -73,6 +72,7 @@ const filteredItems = computed(() => {
     return itemDate >= fromDate && itemDate <= toDate
   })
 })
+
 // fonction permettant d'afficher les données de la bdd dans la table
 onMounted(async () => {
   const data = await useFetch('/api/bdd/bdd')
@@ -86,18 +86,19 @@ onMounted(async () => {
 });
 
 const applyDateFilter = () => {
+
   const table = $("#table")
-  table.bootstrapTable('filterBy', {
-    date: {
-      FROMDATE: dateFrom.value,
-      TODATE: dateTo.value
+  table.bootstrapTable( {'filterAlgorithm': (row, filters)=>{
+      const itemDate = new Date(value);
+      const fromDate = new Date(dateFrom.value);
+      const toDate = new Date(dateTo.value);
+      return itemDate >= fromDate && itemDate <= toDate;
     }
-  })
+})
 }
 
 const generateFile = () => {
-  console.log($('table').bootstrapTable('getData'))
-  console.log($('table').bootstrapTable('getData').filter((item) => item.check))
+  alert(JSON.stringify($('table').bootstrapTable('getData').filter((item) => item.check)) )
   // Générez le fichier ici
 }
 </script>
