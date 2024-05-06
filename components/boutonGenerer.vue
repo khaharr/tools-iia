@@ -11,7 +11,7 @@ export default {
     name: "boutonValider",
     methods: {
     myTest() {
-      alert("Génrer avec succés");
+      alert("Génerer avec succés");
     },
   },
 }

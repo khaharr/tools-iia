@@ -1,5 +1,5 @@
 import pg from 'pg'
-import { useBdd } from '~/composables/useBdd'
+import { clientBdd } from '~/services/bdd.service'
 export default defineEventHandler(async (event) => {
 const {Client } = pg
 
@@ -11,7 +11,7 @@ const client = new Client({
   password: 'postgres',
 })
   await client.connect() 
-
-  return(useBdd.fetchAllData(client))
+// console.log(useBdd.fetchAllData(client))
+  return(clientBdd.fetchAllData(client))
 })
 

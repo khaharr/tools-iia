@@ -1,16 +1,16 @@
 
 import type { Client } from "pg"
 
-export  const useBdd = {
+export  const clientBdd = {
   async  fetchAllData(bdd: Client) {
     try {
       
        const result = await bdd.query('SELECT * FROM nom_fichier')
        const data = result.rows.map((row: any) => ({
-         id: row.id,
-         nomfichier: row.nomfichier,
-         category: row.category,
-         date: row.date,
+        nomfichier: row.nomfichier, 
+        category: row.category,
+        date: row.date,
+        id: row.id,
        }))
        return data
      } 
