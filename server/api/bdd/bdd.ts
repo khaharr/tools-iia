@@ -12,6 +12,8 @@ const client = new Client({
 })
   await client.connect() 
 // console.log(useBdd.fetchAllData(client))
-  return(clientBdd.fetchAllData(client))
+ const data =  await clientBdd.fetchAllData(client)
+ await client.end()
+ return data
 })
 

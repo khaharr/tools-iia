@@ -60,18 +60,6 @@ const items = ref([])
 const dateFrom = ref(null)
 const dateTo = ref(null)
 
-// fonction date filtre
-const filteredItems = computed(() => {
-  return items.value.data.filter(item => {
-    const itemDate = new Date(item.date)
-    if (!dateFrom.value || !dateTo.value) {
-      return true
-    }
-    const fromDate = new Date(dateFrom.value)
-    const toDate = new Date(dateTo.value)
-    return itemDate >= fromDate && itemDate <= toDate
-  })
-})
 
 // fonction permettant d'afficher les données de la bdd dans la table
 onMounted(async () => {
@@ -84,12 +72,12 @@ onMounted(async () => {
     data: items.value.data,
   });
 });
+// fonction date filtre
 
 const applyDateFilter = () => {
-
   const table = $("#table")
-  table.bootstrapTable( {'filterAlgorithm': (row, filters)=>{
-      const itemDate = new Date(value);
+  table.bootstrapTable( 'filterBy',{}, {'filterAlgorithm': (row, filters)=>{
+      const itemDate = new Date(row.date);
       const fromDate = new Date(dateFrom.value);
       const toDate = new Date(dateTo.value);
       return itemDate >= fromDate && itemDate <= toDate;
