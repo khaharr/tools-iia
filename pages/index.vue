@@ -76,12 +76,26 @@ onMounted(async () => {
 
 const applyDateFilter = () => {
   const table = $("#table")
+  table.bootstrapTable('load', items.value.data)
   table.bootstrapTable( 'filterBy',{}, {'filterAlgorithm': (row, filters)=>{
-      const itemDate = new Date(row.date);
-      const fromDate = new Date(dateFrom.value);
-      const toDate = new Date(dateTo.value);
-      return itemDate >= fromDate && itemDate <= toDate;
+    const itemDate = new Date(row.date);
+    const fromDate = dateFrom.value ? new Date(dateFrom.value) : null;
+    const toDate = dateTo.value ? new Date(dateTo.value) : null;
+
+    if (!fromDate && !toDate) {
+      return true;
     }
+
+    if (!fromDate) {
+      return itemDate <= toDate;
+    }
+
+    if (!toDate) {
+      return itemDate >= fromDate;
+    }
+
+    return itemDate >= fromDate && itemDate <= toDate;
+  }
 })
 }
 
