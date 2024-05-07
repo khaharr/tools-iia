@@ -1,10 +1,10 @@
 <template>
-  <div class="search-container">
-    <div class="search-header">
-      <h1> télechargement de fichiers</h1>
-      <h4 class="filter-title ">filtre de recherche <i class="bi bi-search"></i></h4>
+  <div class="tbl-container">
+    <div class="tbl-header">
+      <h1> Téléchargement de fichiers</h1>
+      <h4 class="tbl-filter-title">Filtre de recherche <i class="bi bi-search"></i></h4>
     </div>
-    <div class="search-filters">
+    <div class="tbl-filters">
       <div class="row justify-content-center">
         <div class="col-2">
           <label for="dateFrom" class="form-label">Date de début :</label>
@@ -15,8 +15,10 @@
           <input type="date" class="form-control" id="dateTo" v-model="dateTo" @change="applyDateFilter">
         </div>
         <div class="col-2">
-
-        </div>
+          <label class="form-label">nom du fichier :</label>
+        <input type="text" id="customSearch" class="form-control" placeholder="rechercher"> 
+      </div>
+      
       </div>
     </div>
     <div class="w-75 m-auto">
@@ -26,14 +28,17 @@
         data-toggle="table"
         data-pagination="true"
         data-cookie="true"
+        data-search="true"
         data-cookie-id-table="saveId"
         data-filter-control="true"
+        data-search-highlight="true"
         data-click-to-select="true"
+        data-search-selector="#customSearch"
       >
         <thead class="table-dark">
           <tr>
             <th data-checkbox="true" data-field="check"></th>
-            <th  data-field="id">id</th>
+            <th data-field="id">id</th>
             <th data-field="nomfichier" data-searchable="true" data-click-to-select="true">nom fichier</th>
             <th data-field="category" data-searchable="false">category</th>
             <th data-field="date" data-sortable="true" data-searchable="false">date mise en ligne</th>
@@ -41,13 +46,13 @@
         </thead>
       </table>
     </div>
-    <div class="position-absolute  start-50 translate-middle" >
+    <div class="position-absolute start-50 translate-middle">
       <div>
         <button class="btn btn-primary validerCouleur" @click="generateFile" type="button" id="inputGroupFileAddon04">
-            Générer Fichier
-          </button>
-    </div>
+          Générer Fichier
+        </button>
       </div>
+    </div>
   </div>
 </template>
 
@@ -106,6 +111,5 @@ const generateFile = () => {
 </script>
 
 <style lang="scss" scoped>
-
 
 </style>
