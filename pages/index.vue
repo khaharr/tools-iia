@@ -5,6 +5,7 @@
       <div class="tbl-filters">
         
         <h4 class="tbl-filter-title">Filtre de recherche <i class="bi bi-search"></i></h4>
+       
         <div class="row justify-content-center">
           <div class="col-2">
             <label for="dateFrom" class="form-label">Date de début :</label>
@@ -56,7 +57,7 @@
         </thead>
       </table>
       <div class="">
-        <button class="btn btn-primary validerCouleur" @click="generateFile" type="button" id="inputGroupFileAddon04">
+        <button class="btn btn-primary validerCouleur" @click="generateFile" type="button" id="inputGroupFileAddon04"  data-dismiss="alert">
           Générer Fichier
         </button>
     </div>
@@ -117,13 +118,21 @@ const applyDateFilter = () => {
     }
   );
 };
-
 const generateFile = async () => {
+  // Récupère les lignes sélectionnées de la table
   const selectedRows = $("#table").bootstrapTable("getSelections");
-  const data = await useFetch("/api/bdd/bdd.insert", { method: "POST", body: JSON.stringify(selectedRows), });
+  const data = await useFetch("/api/bdd/bdd.insert", {
+    method: "POST",
+    body: JSON.stringify(selectedRows), // Convertit le tableau selectedRows en une chaîne JSON
+  });
+
+  // Met à jour le tableau items avec les nouvelles données provenant du serveur
   items.value = data;
+
+  // Met à jour la table avec les nouvelles données
   const table = $("#table");
   table.bootstrapTable({ data: items.value.data, });
+  alert('fichier mis dans les télechargement')
   
 };
 
@@ -135,7 +144,6 @@ const generateFile = async () => {
   margin: 20px auto;
   padding: 20px;
   background-color: #ddd0c8;
-  border: 1px solid #afafaf;
   width: 70vw;
   border-radius: 10px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
