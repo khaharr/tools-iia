@@ -16,6 +16,9 @@
                         <li class="nav-item">
                             <a class="nav-link couleurTexte" :class="{ navText: isActive === 'affichage' }" href="/paiement" @click="isActive = 'paiement'">paiement</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link couleurTexte" :class="{ navText: isActive === 'affichage' }" href="/jeuDonnees" @click="isActive = 'paiement'">jeux de données</a>
+                        </li>
                         <li class="nav-item dropdown">
                         </li>
                     </ul>
