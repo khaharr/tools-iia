@@ -7,7 +7,7 @@
         <div class="card">
           <div class="card-body">
             <h5 class="card-title">Sélectionner les fichiers à déposer</h5>
-            <input type="file" class="form-control" id="inputGroupFile01" @change="handleFileUpload($event)">
+            <input type="file" class="form-control" id="inputGroupFile01" multiple @change="handleFileUpload($event)">
             <div class="mt-3">
               <label for="categorySelect" class="form-label">Choisir la catégorie :</label>
               <select class="form-select" id="categorySelect" v-model="selectedCategory">
@@ -70,6 +70,7 @@ const handleFileUpload = (event: Event) => {
   if (files) {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+
     }
   }
 };
@@ -85,13 +86,14 @@ const uploadFiles = () => {
   // Récupérer les fichiers sélectionnés par l'utilisateur
   const input = document.querySelector('input[type="file"]') as HTMLInputElement;
   const files = input.files;
-  console.log(files)
+
 
   // Vérifier si des fichiers ont été sélectionnés
   if (files) {
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       depositedFiles.value.push({ name: file.name, category: selectedCategory.value });
+      console.log(file)
     }
   } else {
     alert('Veuillez sélectionner au moins un fichier.');
@@ -112,7 +114,7 @@ const sendFilesToServer = () => {
   const formData = new FormData();
   uploadedFiles.value.forEach(file => {
     formData.append('files[]', file.name);
-
+    console.log(file)
   });
 
   fetch('/api/example/file', {
