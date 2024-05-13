@@ -1,7 +1,8 @@
 <template>
-  <div class="container mt-5">
-    <h1>Déposer des fichiers</h1>
-    <div class="row mt-3">
+  <div class="bgg">
+  <div class="container">
+    <h1 >Déposer des fichiers</h1>
+    <div class="row mt-4">
       <div class="col-md-6">
         <div class="card">
           <div class="card-body">
@@ -22,16 +23,23 @@
         <div class="card" v-if="depositedFiles.length > 0">
           <div class="card-body">
             <h5 class="card-title">Fichiers déposés</h5>
-            <button class="btn btn-success mt-3" @click="sendFilesToServer">Envoyer les fichiers</button>
             <ul class="list-group">
               <li v-for="(file, index) in depositedFiles" :key="index" class="list-group-item d-flex justify-content-between align-items-center">
                 <div>
-                  <span>{{ file.name }}</span>
+                  <span>{{ file.name }}</span><br>
                   <span class="badge bg-secondary">{{ file.category }}</span>
                 </div>
                 <button class="btn btn-danger btn-sm" @click="removeFile(index)">Supprimer</button>
               </li>
             </ul>
+            <button class="btn btn-success mt-3" @click="sendFilesToServer">Envoyer les fichiers</button>
+            <div>
+            <p class="mt-4">début du télechargement : </p>
+            <div class="progress" role="progressbar"   aria-label="Animated striped example" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+          </div>
+          </div>
+
           </div>
         </div>
         <div class="alert alert-info mt-3" role="alert" v-else>
@@ -40,7 +48,7 @@
       </div>
     </div>
   </div>
-  
+</div>
 </template>
 
 <script setup lang="ts">
@@ -99,7 +107,7 @@ const removeFile = (index: number) => {
   depositedFiles.value.splice(index, 1);
 };
 
-// Fonction pour envoyer les fichiers à un serveur
+// Fonction pour envoyer les fichiers au back
 const sendFilesToServer = () => {
   const formData = new FormData();
   uploadedFiles.value.forEach(file => {
@@ -107,7 +115,7 @@ const sendFilesToServer = () => {
 
   });
 
-  fetch('URL_DU_SERVEUR', {
+  fetch('/api/example/file', {
     method: 'POST',
     body: formData
   })
@@ -124,7 +132,8 @@ const sendFilesToServer = () => {
 </script>
 
 <style scoped>
-.container {
-  max-width: 900px;
+.bgg{
+  background-color: #ddd0c8;
+
 }
 </style>

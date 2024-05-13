@@ -4,7 +4,7 @@
         <h1>Téléchargement de fichiers</h1>
       <div class="tbl-filters">
         
-        <h4 class="tbl-filter-title">Filtre de recherche <i class="bi bi-search"></i></h4>
+        <h4 class="tbl-filter-title d-flex justify-content-center">Filtre de recherche <i class=" bi bi-search"></i></h4>
        
         <div class="row justify-content-center">
           <div class="col-2">
