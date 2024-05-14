@@ -1,20 +1,19 @@
-import { defineEventHandler } from 'h3';
-import pg from 'pg'
+import pg from 'pg';
 import { file } from '~/services/depot.service';
 
 export default defineEventHandler(async (event) => {
-  const {Client } = pg
-
-  const client = new Client({ host: 'localhost', port: 5432, database: 'tools-iia', user: 'postgres', password: 'postgres', });
+  const { Client } = pg;
+  const client = new Client({
+    host: 'localhost',
+    port: 5432,
+    database: 'tools-iia',
+    user: 'postgres',
+    password: 'postgres',
+  });
 
   await client.connect();
 
-// En supposant que `event.context.body` contient les fichiers téléchargés
-  const uploadedFiles = event.context.body;
-
-  const data = await file.upload(client, uploadedFiles);
-
+  const data = await file.upload(client, uploadedFiles)
   await client.end();
-
-  return data;
-})
+  return data ;
+});

@@ -34,7 +34,7 @@ async file (bdd: Client, uploadedFiles: { name: string; category: string; data: 
       for (const file of uploadedFiles) {
         const arrayBuffer = await file.data.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
-        const result = await bdd.query('INSERT INTO files (name, category, data) VALUES ($1, $2, $3)', [file.name, file.category, buffer]);
+        const result = await bdd.query('INSERT INTO file (name, category, data) VALUES ($1, $2, $3)', [file.name, file.category, buffer]);
         console.log('File uploaded successfully:', result.rowCount);
       }
       uploadedFiles = [];

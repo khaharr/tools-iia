@@ -120,7 +120,7 @@ const sendFilesToServer = () => {
     console.log(file)
   });
 
-  fetch('/api/bdd/bdd.insert', {
+  fetch('/api/bdd/depot', {
     method: 'POST',
     body: formData
   })
