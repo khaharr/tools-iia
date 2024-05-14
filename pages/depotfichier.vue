@@ -32,8 +32,11 @@
                 <button class="btn btn-danger btn-sm" @click="removeFile(index)">Supprimer</button>
               </li>
             </ul>
+            <div class="d-flex justify-content-center">
             <button class="btn btn-success mt-3" @click="sendFilesToServer">Envoyer les fichiers</button>
+          </div>
             <div>
+         
             <p class="mt-4">début du télechargement : </p>
             <div class="progress" role="progressbar"   aria-label="Animated striped example" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
             <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
@@ -117,7 +120,7 @@ const sendFilesToServer = () => {
     console.log(file)
   });
 
-  fetch('/api/example/file', {
+  fetch('/api/bdd/depot', {
     method: 'POST',
     body: formData
   })

@@ -11,7 +11,7 @@
                             <a class="nav-link couleurTexte" :class="{ navText: isActive === 'upload' }"href="/" aria-current="page" @click="isActive = 'upload'">téléchargement</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link couleurTexte" :class="{ navText: isActive === 'affichage' }" href="/depotfichier" @click="isActive = 'affichage'">envoi</a>
+                            <a class="nav-link couleurTexte" :class="{ navText: isActive === 'affichage' }" href="/depotfichier" @click="isActive = 'affichage'">dépot</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link couleurTexte" :class="{ navText: isActive === 'affichage' }" href="/paiement" @click="isActive = 'paiement'">paiement</a>

@@ -7,6 +7,9 @@
         <option value="tiers_malade_with_reference">Titre EPS avec référence tiers malade</option>
         <option value="tiers_malade_without_reference">Titre EPS sans référence tiers malade</option>
         <option value="rnf">Titre RNF</option>
+        <option value="roles">roles</option>
+        <option value="titres">Titres</option>
+
       </select>
     </div>
     <button class="btn btn-primary" @click="generateInvoices">Générer un fichier de factures</button>

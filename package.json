@@ -21,7 +21,7 @@
     "nuxt": "^3.11.2",
     "pg": "^8.11.5",
     "vue": "^3.4.21",
-    "vue-router": "^4.3.0",
+    "vue-router": "^4.3.0"
   },
   "devDependencies": {
     "sass": "^1.75.0"
