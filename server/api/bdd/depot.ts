@@ -1,35 +1,20 @@
 import { defineEventHandler } from 'h3';
-import { fileUpload } from '~/services/depot.service';
-import { Client } from 'pg';
-
-const client = new Client({
-  host: 'localhost',
-  port: 5432,
-  database: 'tools-iia',
-  user: 'postgres',
-  password: 'postgres',
-});
+import pg from 'pg'
+import { file } from '~/services/depot.service';
 
 export default defineEventHandler(async (event) => {
+  const {Client } = pg
+
+  const client = new Client({ host: 'localhost', port: 5432, database: 'tools-iia', user: 'postgres', password: 'postgres', });
+
   await client.connect();
 
-  const files = await fileUpload(event);
+// En supposant que `event.context.body` contient les fichiers téléchargés
+  const uploadedFiles = event.context.body;
 
-  try {
-    // Save the file names to the database
-    const filesToInsert = files.map((file: { originalname: any; category: any; }) => ({
-      name: file.originalname,
-      category: file.category,
-    }));
+  const data = await file.upload(client, uploadedFiles);
 
-    const query = 'INSERT INTO files (name, category) VALUES ($1, $2)';
-    for (const file of filesToInsert) {
-      await client.query(query, [file.name, file.category]);
-    }
+  await client.end();
 
-    return { message: 'Files uploaded successfully.' };
-  } catch (error) {
-    console.error(error);
-    return { message: 'An error occurred while uploading files.' };
-  }
-});
+  return data;
+})
