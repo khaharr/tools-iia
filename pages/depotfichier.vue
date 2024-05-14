@@ -117,7 +117,7 @@ const sendFilesToServer = () => {
   const formData = new FormData();
   uploadedFiles.value.forEach(file => {
     formData.append('files[]', file.name);
-    console.log(file)
+    console.log(FormData)
   });
 
   fetch('/api/bdd/depot', {
