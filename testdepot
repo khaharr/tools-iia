@@ -1,0 +1,41 @@
+import express from 'express';
+import multer from 'multer';
+import path from 'path';
+
+const app = express();
+const port = 3000;
+
+// Définir le dossier de destination pour enregistrer les fichiers téléversés
+const uploadDirectory = path.join(__dirname, 'uploads');
+
+// Configurer multer pour gérer le téléversement de fichiers
+const storage = multer.diskStorage({
+  destination: uploadDirectory,
+  filename: (req, file, cb) => {
+    cb(null, `${Date.now()}-${file.originalname}`);
+  }
+});
+const upload = multer({ storage: storage });
+
+// Endpoint pour recevoir les fichiers du front
+app.post('/api/bdd/depot', upload.array('files'), (req, res) => {
+  // Si des fichiers ont été téléversés avec succès
+  if (req.files) {
+    const uploadedFiles = req.files.map((file: Express.Multer.File) => ({
+      name: file.filename,
+      category: '' // Vous pouvez ajouter la catégorie ici si nécessaire
+    }));
+
+    // Afficher les informations des fichiers dans la console
+    console.log('Fichiers téléversés avec succès :', uploadedFiles);
+    
+    res.status(200).send('Fichiers téléversés avec succès.');
+  } else {
+    res.status(400).send('Aucun fichier n\'a été téléversé.');
+  }
+});
+
+// Démarrer le serveur
+app.listen(port, () => {
+  console.log(`Le serveur est démarré sur le port ${port}`);
+});
