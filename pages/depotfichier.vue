@@ -115,9 +115,9 @@ const removeFile = (index: number) => {
 // Fonction pour envoyer les fichiers au back
 const sendFilesToServer = () => {
   const formData = new FormData();
-  uploadedFiles.value.forEach(file => {
+  depositedFiles.value.forEach(file => {
     formData.append('files[]', file.name);
-    console.log(FormData)
+    console.log(depositedFiles.value)
   });
 
   fetch('/api/bdd/depot', {
@@ -128,7 +128,7 @@ const sendFilesToServer = () => {
   .then(data => {
     console.log('Fichiers envoyés avec succès:', data);
     // Réinitialiser la liste des fichiers téléversés
-    uploadedFiles.value = [];
+    depositedFiles.value = [];
   })
   .catch(error => {
     console.error('Erreur lors de l\'envoi des fichiers:', error);
