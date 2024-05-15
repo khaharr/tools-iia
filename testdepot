@@ -1,39 +1,13 @@
 import express from 'express';
-import multer from 'multer';
-import path from 'path';
 
-const app = express();
-const PORT = 3000;
+const router = express.Router();
 
-// Configurer le stockage des fichiers avec Multer
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/'); // Dossier de destination des fichiers
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}_${file.originalname}`); // Nom de fichier unique
-  },
+router.post('/api/bdd/depot', (req, res) => {
+  // Gérer les fichiers envoyés ici
+  console.log('Infos des fichiers reçus :', req.files);
+  
+  // Répondre au frontend
+  res.status(200).json({ message: 'Fichiers reçus avec succès' });
 });
 
-const upload = multer({ storage: storage });
-
-// Endpoint pour recevoir les fichiers depuis le frontend
-app.post('/api/bdd/depot', upload.array('files'), (req, res) => {
-  // Récupérer les informations sur les fichiers uploadés
-  const files = req.files as Express.Multer.File[];
-
-  // Afficher les informations dans la console
-  files.forEach(file => {
-    console.log('Fichier reçu:', file.originalname);
-    console.log('Taille:', file.size);
-    console.log('Type MIME:', file.mimetype);
-    console.log('Chemin:', file.path);
-  });
-
-  res.status(200).json({ message: 'Fichiers reçus avec succès.' });
-});
-
-// Démarrer le serveur
-app.listen(PORT, () => {
-  console.log(`Serveur démarré sur le port ${PORT}`);
-});
+export default router;
