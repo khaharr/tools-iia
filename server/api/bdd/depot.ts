@@ -11,20 +11,21 @@ export default defineEventHandler(async (event) => {
   }
  
   try {
-    const uploadsDirectory = path.join(process.cwd(), 'server','api', 'bdd', 'uploads');
+    const uploadsDirectory = path.join(process.cwd(), 'server', 'api', 'bdd', 'uploads');
 
     for (const file of formData) {
       const fileBuffer: Buffer = file.data;
-      const fileContent = fileBuffer.toString('utf8');
       
-      if (file.filename === undefined){
-        return "error"
-      };
+      if (!file.filename) {
+        console.error('Le nom du fichier est indéfini.');
+        continue;
+      }
+
       const filePath = path.join(uploadsDirectory, file.filename);
 
-      // Écrire le contenu du fichier dans le fichier de destination
-      fs.writeFileSync(filePath, fileContent, 'utf8');
-      
+      // Écrire le contenu brut du fichier dans le fichier de destination
+      fs.writeFileSync(filePath, fileBuffer);
+      console.log(fileBuffer)
       console.log(`Fichier enregistré: ${file.filename}`);
     }
 
