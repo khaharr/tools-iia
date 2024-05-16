@@ -64,7 +64,6 @@ const uploadedFiles = ref<File[]>([]);
 
 const uploadFiles = () => {
   if (selectedCategory.value === '') {
-    alert('Veuillez sélectionner une catégorie.');
     return;
   }
 
@@ -89,8 +88,8 @@ const removeFile = (index: number) => {
 
 const sendFilesToServer = async () => {
   const formData = new FormData();
-  depositedFiles.value.forEach((file) => {
-    formData.append('files', file.file);
+  depositedFiles.value.forEach(( file, i) => {
+    formData.append('files'+i , file.file);
   });
 
   try {
@@ -98,8 +97,8 @@ const sendFilesToServer = async () => {
       method: 'POST',
       body: formData
     });
-    // const data = await response.json();
-    // console.log('Fichiers envoyés avec succès:', data);
+
+    console.log('Fichiers envoyés avec succès:', formData);
     depositedFiles.value = [];
   } catch (error) {
     console.error('Erreur lors de l\'envoi des fichiers:', error);

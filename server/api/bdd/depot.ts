@@ -1,21 +1,20 @@
-
+import { defineEventHandler } from 'h3';
+import { readBody, readRawBody } from 'h3';
 import fs from 'fs';
+import path from 'path';
 
 export default defineEventHandler(async (event) => {
+  const formData = await readMultipartFormData(event) 
+  if (formData === undefined){
+    return "error"
+  };
 
-  // const {formData} = ge
-const t = await readBody(event)
-console.log(t)  
-// Déplacer les fichiers téléchargés vers le dossier de destination
-  // const fileKeys = Object.keys(files);
-  // fileKeys.forEach((key) => {
-  //   const file: File = files[key] as unknown as File;
-  //   const oldPath = file.path;
-  //   const newPath = path.join(__dirname, 'uploads', file.name); // Chemin de destination
-  //   fs.renameSync(oldPath, newPath);
-  // });
+  formData.forEach(file => {
+    const fileBuffer: Buffer = file.data  
+    const fileContent = fileBuffer.toString('utf8'); // converti
+    console.log(file.filename , fileContent); 
+  
+  });
 
-
-
-
-})
+  return { message: 'Fichiers envoyés avec succès!' };
+});
