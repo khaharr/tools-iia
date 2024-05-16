@@ -7,7 +7,7 @@
         <div class="card">
           <div class="card-body">
             <h5 class="card-title">Sélectionner les fichiers à déposer</h5>
-            <input type="file" class="form-control" id="inputGroupFile01" multiple @change="handleFileUpload($event)">
+            <input type="file" class="form-control" id="inputGroupFile01" multiple  @change="uploadFiles">
             <div class="mt-3">
               <label for="categorySelect" class="form-label">Choisir la catégorie :</label>
               <select class="form-select" id="categorySelect" v-model="selectedCategory">
@@ -27,7 +27,7 @@
               <li v-for="(file, index) in depositedFiles" :key="index" class="list-group-item d-flex justify-content-between align-items-center">
                 <div>
                   <span>{{ file.name }}</span><br>
-                  <span class="badge bg-secondary">{{ file.category }}</span>
+                  <span class="badge bg-secondary"> {{ file.category }}</span>
                 </div>
                 <button class="btn btn-danger btn-sm" @click="removeFile(index)">Supprimer</button>
               </li>
@@ -57,82 +57,53 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
-// Liste des catégories disponibles
 const categories = ref<string[]>(['Catégorie 1', 'Catégorie 2', 'Catégorie 3']);
-// Catégorie sélectionnée par l'utilisateur
 const selectedCategory = ref<string>('');
-// Liste des fichiers déposés
-const depositedFiles = ref<{ name: string; category: string }[]>([]);
-// Liste des fichiers téléversés
-const uploadedFiles = ref<{ name: string; category: string }[]>([]);
+const depositedFiles = ref<{ name: string; category: string; file: File }[]>([]);
+const uploadedFiles = ref<File[]>([]);
 
-// Fonction pour gérer le téléchargement des fichiers
-const handleFileUpload = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  const files = target.files;
-  if (files) {
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-
-    }
-  }
-};
-
-// Fonction pour déposer les fichiers dans la catégorie sélectionnée
 const uploadFiles = () => {
-  // Vérifier si une catégorie a été sélectionnée
   if (selectedCategory.value === '') {
     alert('Veuillez sélectionner une catégorie.');
     return;
   }
 
-  // Récupérer les fichiers sélectionnés par l'utilisateur
   const input = document.querySelector('input[type="file"]') as HTMLInputElement;
-  const files = input.files;
-
-
-  // Vérifier si des fichiers ont été sélectionnés
-  if (files) {
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      depositedFiles.value.push({ name: file.name, category: selectedCategory.value });
-      console.log(file)
-    }
-  } else {
+  const files = Array.from(input.files as FileList);
+  console.log(files)
+  if (files.length === 0) {
     alert('Veuillez sélectionner au moins un fichier.');
     return;
   }
 
-  // Effacer les fichiers déposés de l'input file
+  files.forEach((file) => {
+    depositedFiles.value.push({ name: file.name, category: selectedCategory.value, file });
+  });
+
   input.value = '';
 };
 
-// Fonction pour supprimer un fichier déposé
 const removeFile = (index: number) => {
   depositedFiles.value.splice(index, 1);
 };
 
-// Fonction pour envoyer les fichiers au back
-const sendFilesToServer = () => {
+const sendFilesToServer = async () => {
   const formData = new FormData();
-  depositedFiles.value.forEach(file => {
-    formData.append('files[]', file.name);
-    console.log(depositedFiles.value)
+  depositedFiles.value.forEach((file) => {
+    formData.append('files', file.file);
   });
 
-  fetch('/api/bdd/depot', {
-    method: 'POST',
-    body: formData
-  })
-  .then(response => response.json())
-  .then(data => {
-    console.log('Fichiers envoyés avec succès:', data);
-    // Réinitialiser la liste des fichiers téléversés
+  try {
+    const response = await useFetch('/api/bdd/depot', {
+      method: 'POST',
+      body: formData
+    });
+    // const data = await response.json();
+    // console.log('Fichiers envoyés avec succès:', data);
     depositedFiles.value = [];
-  })
-  .catch(error => {
+  } catch (error) {
     console.error('Erreur lors de l\'envoi des fichiers:', error);
-  });
+  }
 };
 </script>
 

@@ -19,6 +19,7 @@
     "date-fns": "^2.30.0",
     "formidable": "^3.5.1",
     "jquery": "^3.7.1",
+    "multer": "^1.4.5-lts.1",
     "nuxt": "^3.11.2",
     "pg": "^8.11.5",
     "vue": "^3.4.21",
@@ -26,6 +27,7 @@
   },
   "devDependencies": {
     "@types/formidable": "^3.4.5",
+    "@types/multer": "^1.4.11",
     "sass": "^1.75.0"
   }
 }
