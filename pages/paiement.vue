@@ -103,14 +103,13 @@ async function paiement() {
 </div>
 </template>
 
-<style>
+<style scoped>
 .payment-form-container {
   background-color: rgb(255, 255, 255);
   border: 1px solid #000000;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   padding: 2rem;
   border-radius: 10px;
-  width: 70vw;
   box-shadow: 10px 5px 5px rgb(180, 180, 180);}
   
 body{

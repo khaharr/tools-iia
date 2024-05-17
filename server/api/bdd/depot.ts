@@ -1,6 +1,5 @@
 import fs from 'fs';
 import path from 'path';
-import { createToastification } from 'vue-toastification';
 
 export default defineEventHandler(async (event) => {
   const formData = await readMultipartFormData(event);
@@ -25,8 +24,8 @@ export default defineEventHandler(async (event) => {
 
       // Écrire le contenu brut du fichier dans le fichier de destination
       fs.writeFileSync(filePath, fileBuffer);
-      console.log(fileBuffer)
-      console.log(`Fichier enregistré: ${file.filename}`);
+      // console.log(fileBuffer)
+      // console.log(`Fichier enregistré: ${file.filename}`);
     }
 
     return { message: 'Fichiers envoyés avec succès!' };
