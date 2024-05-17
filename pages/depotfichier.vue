@@ -39,7 +39,7 @@
          
             <p class="mt-4">début du télechargement : </p>
             <div class="progress" role="progressbar"   aria-label="Animated striped example" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100">
-            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 100%"></div>
+            <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
           </div>
           </div>
 
@@ -57,6 +57,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 
+const toast = createToastification();
 const categories = ref<string[]>(['Catégorie 1', 'Catégorie 2', 'Catégorie 3']);
 const selectedCategory = ref<string>('');
 const depositedFiles = ref<{ name: string; category: string; file: File }[]>([]);
@@ -85,27 +86,52 @@ const uploadFiles = () => {
 const removeFile = (index: number) => {
   depositedFiles.value.splice(index, 1);
 };
-
 const sendFilesToServer = async () => {
   const formData = new FormData();
-  depositedFiles.value.forEach(( file, i) => {
-    formData.append('files'+i , file.file);
+  let totalSize = 0;
+
+  depositedFiles.value.forEach((file, i) => {
+    formData.append('files' + i, file.file);
+    totalSize += file.file.size;
   });
 
-  try {
-    const response = await useFetch('/api/bdd/depot', {
-      method: 'POST',
-      body: formData
-    });
+  let uploadedSize = 0;
 
-    console.log('Fichiers envoyés avec succès:', formData);
-    depositedFiles.value = [];
-  } catch (error) {
-    console.error('Erreur lors de l\'envoi des fichiers:', error);
+  for (const file of depositedFiles.value) {
+    try {
+      const response = await useFetch('/api/bdd/depot', {
+        method: 'POST',
+        body: formData
+      });
+
+      uploadedSize += file.file.size;
+      const progress = (uploadedSize / totalSize) * 100;
+      console.log(`${progress}% uploaded`);
+
+      // Mettre à jour la barre de progression
+      const progressBar = document.querySelector('.progress-bar') as HTMLElement;
+      progressBar.style.transition = 'width 0.1s ease';
+      progressBar.style.width = `${progress}%`;
+      progressBar.setAttribute('aria-valuenow', progress.toString());
+
+      // Attendre 50 millisecondes avant de continuer
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    } catch (error) {
+      console.error('Erreur lors de l\'envoi des fichiers:', error);
+    }
+
+    // Supprimer le fichier envoyé de la formData
+    formData.delete('files' + depositedFiles.value.indexOf(file));
   }
+
+  console.log('Fichiers envoyés avec succès:', formData);
+  
+  depositedFiles.value = [];
+  
+  // Afficher un message de succès
+  toast.success('Fichiers envoyés avec succès !');
 };
 </script>
-
 <style scoped>
 .bgg{
   background-color: #ddd0c8;

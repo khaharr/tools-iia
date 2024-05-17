@@ -1,7 +1,6 @@
-import { defineEventHandler } from 'h3';
-import { readMultipartFormData } from 'h3';
 import fs from 'fs';
 import path from 'path';
+import { createToastification } from 'vue-toastification';
 
 export default defineEventHandler(async (event) => {
   const formData = await readMultipartFormData(event);
@@ -11,11 +10,12 @@ export default defineEventHandler(async (event) => {
   }
  
   try {
+    // répertoire de téléchargement 
     const uploadsDirectory = path.join(process.cwd(), 'server', 'api', 'bdd', 'uploads');
 
     for (const file of formData) {
       const fileBuffer: Buffer = file.data;
-      
+     // vérifie si le nom du fichier est défini
       if (!file.filename) {
         console.error('Le nom du fichier est indéfini.');
         continue;
