@@ -1,0 +1,42 @@
+Voici quelques questions que vous pourriez poser à un professionnel du métier de développeur :
+
+1)   Pouvez-vous décrire une journée typique dans votre travail en tant que développeur web et mobile ?
+
+2)  Quels sont les langages de programmation que t'utilise le plus souvent dans votre travail quotidien ?
+
+3)  Comment gérez-vous la phase de compréhension des exigences du client ou du projet avant de commencer à coder ?
+
+4)  Quels outils ou technologies utilisez-vous pour créer des maquettes, des wireframes ou des prototypes ?
+
+5)  Comment assurez-vous la qualité du code que vous écrivez et comment gérez-vous les tests ?
+
+6)  Pouvez-vous expliquer votre approche pour la maintenance des applications et la correction des bugs ?
+
+7)  Comment restez-vous à jour sur les nouvelles technologies et les tendances du secteur ?
+8)  Quels ont été les défis les plus importants auxquels vous avez été confronté en tant que développeur et comment les avez-vous surmontés ?
+
+9)  Comment travaillez-vous en équipe avec d'autres développeurs ou membres d'une équipe projet ?
+
+10) Quels sont vos conseils pour les personnes qui souhaitent se lancer dans une carrière de développeur web et mobile ?
+
+11) Quel est le processus de recrutement dans votre entreprise pour les développeurs ?
+
+12) Quels sont les critères que vous recherchez chez un développeur pour rejoindre votre équipe ?
+
+13) Y a-t-il des opportunités de formation ou de développement professionnel pour les nouveaux employés ?
+
+14) Comment est organisée l'équipe de développement dans votre entreprise ?
+
+15)Quels sont les projets sur lesquels je pourrais travailler en tant que nouveau membre de l'équipe ?
+
+16) Comment se déroule l'intégration des nouveaux employés dans l'équipe ?
+
+17) Quels sont les principaux défis auxquels votre équipe est confrontée actuellement ?
+
+18) Comment l'entreprise encourage-t-elle l'innovation et la créativité dans le travail des développeurs ?
+
+19) Quels sont les avantages et les possibilités d'évolution professionnelle offerts aux développeurs au sein de votre entreprise ?
+
+20) Y a-t-il des aspects culturels ou des valeurs d'entreprise auxquels je devrais m'attendre en tant que nouvel employé ?
+
+21) Ces questions devraient vous donner un bon aperçu du travail quotidien d'un développeur ainsi que des attentes lors de l'intégration dans une entreprise.

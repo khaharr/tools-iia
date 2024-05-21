@@ -1,0 +1,19 @@
+ <div class="product-box">
+                    <h1><?php echo $infos_product["name"] ?></h1>
+                    <p>Catégorie <?php echo $infos_product["category"] ?></p>
+                    <p><i><?php echo $infos_product["description"] ?></i></p>
+                    <h6><?php echo $infos_product["price"] ?>€</h6>
+                    <br><br>
+                    <div class="comment-box">
+                        <h1>Commentaires et avis : </h1>
+                        <form action="/actions/comment.php?product=<?php echo $_GET["product"] ?>" method="post">
+                            <input type="text" name="comment" id="comment" placeholder="Laissez votre commentaire ici">
+                            <label for="rating">Votre note</label>
+                            <input type="number" name="rating" id="rating" value=5 min=0 max=5>
+                            <input type="submit" name="submit_comment" id="submit_comment" value="Envoyer le commentaire">
+                        </form>
+                        <?php if (isset($infos_product["rating"])) { ?>
+                            <p><?php echo $infos_product["username"] . " : " .  $infos_product["date"] ?></p>
+                            <p><?php echo "Note: " . $infos_product["rating"] . '/5' ?></p>
+                            <p><?php echo $infos_product["commentary"] ?></p>
+                        <?php } ?>
