@@ -1,75 +1,46 @@
-<script setup lang="ts">
-import { ref } from "vue";
+import fs from 'fs';
+import path from 'path';
+import { defineEventHandler, readMultipartFormData } from 'h3';
 
-const categories = ref<string[]>(["Catégorie 1", "Catégorie 2", "Catégorie 3"]);
-const selectedCategory = ref<string>("");
-const depositedFiles = ref<{ name: string; category: string; file: File }[]>([]);
-const fileStatuses = ref<{ name: string; status: string; error?: string }[]>([]);
+export default defineEventHandler(async (event) => {
+  const formData = await readMultipartFormData(event);
+  
+  if (!formData || formData.length === 0) {
+    return { message: 'Aucun fichier trouvé.', files: [] };
+  }
+ 
+  const results = [];
 
-const uploadFiles = () => {
-  // (Le reste du code reste inchangé)
-};
+  try {
+    const uploadsDirectory = path.join(process.cwd(), 'server', 'api', 'bdd', 'uploads');
 
-const removeFile = (index: number) => {
-  depositedFiles.value.splice(index, 1);
-};
-
-const sendFilesToServer = async () => {
-  const formData = new FormData();
-  let totalSize = 0;
-
-  depositedFiles.value.forEach((file, i) => {
-    formData.append("files" + i, file.file);
-    totalSize += file.file.size;
-  });
-
-  let uploadedSize = 0;
-
-  for (const file of depositedFiles.value) {
-    try {
-      const response = await useFetch("/api/bdd/depot", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de l\'envoi du fichier.');
+    for (const file of formData) {
+      const fileBuffer: Buffer = file.data;
+      
+      if (!file.filename) {
+        console.error('Le nom du fichier est indéfini.');
+        results.push({ name: 'undefined', success: false, error: 'Le nom du fichier est indéfini.' });
+        continue;
       }
 
-      const result = await response.json();
+      const filePath = path.join(uploadsDirectory, file.filename);
 
-      result.files.forEach((resFile: any) => {
-        fileStatuses.value.push({
-          name: resFile.name,
-          status: resFile.success ? 'success' : 'error',
-          error: resFile.error,
-        });
-      });
-
-      uploadedSize += file.file.size;
-      const progress = (uploadedSize / totalSize) * 100;
-
-      const progressBar = document.querySelector(".progress-bar") as HTMLElement;
-      progressBar.style.transition = "width 0.1s ease";
-      progressBar.style.width = `${progress}%`;
-      progressBar.setAttribute("aria-valuenow", progress.toString());
-
-      await new Promise((resolve) => setTimeout(resolve, 50));
-    } catch (error) {
-      console.error("Erreur lors de l'envoi des fichiers:", error);
-      fileStatuses.value.push({
-        name: file.name,
-        status: 'error',
-        error: error.message,
-      });
+      try {
+        fs.writeFileSync(filePath, fileBuffer);
+        results.push({ name: file.filename, success: true });
+      } catch (error) {
+        console.error(`Erreur lors de l'enregistrement du fichier: ${file.filename}`, error);
+        results.push({ name: file.filename, success: false, error: error instanceof Error ? error.message : String(error) });
+      }
     }
 
-    formData.delete("files" + depositedFiles.value.indexOf(file));
+    return { message: 'Traitement terminé.', files: results };
+  } catch (error) {
+    console.error('Erreur lors de l\'enregistrement des fichiers :', error);
+    return { message: 'Erreur lors de l\'enregistrement des fichiers.', files: results };
   }
-  alert("Fichiers envoyés avec succès");
-  depositedFiles.value = [];
-};
-</script>
+});
+
 <template>
   <div class="bgg">
     <div class="container">
@@ -87,7 +58,6 @@ const sendFilesToServer = async () => {
                 <label for="categorySelect" class="form-label">Choisir la catégorie :</label>
                 <select class="form-select" id="categorySelect" v-model="selectedCategory">
                   <option value="">Sélectionner une catégorie</option>
-
                   <option v-for="category in categories" :value="category" :key="category">{{ category }}</option>
                 </select>
               </div>
@@ -160,44 +130,128 @@ const sendFilesToServer = async () => {
   </div>
 </template>
 
-import fs from 'fs';
-import path from 'path';
+<script setup lang="ts">
+import { ref } from "vue";
 
-export default defineEventHandler(async (event) => {
-  const formData = await readMultipartFormData(event);
-  
-  if (formData === undefined || formData.length === 0) {
-    return { message: 'Aucun fichier trouvé.' };
+const categories = ref<string[]>(["Catégorie 1", "Catégorie 2", "Catégorie 3"]);
+const selectedCategory = ref<string>("");
+const depositedFiles = ref<{ name: string; category: string; file: File }[]>([]);
+const fileStatuses = ref<{ name: string; status: string; error?: string }[]>([]);
+
+const uploadFiles = () => {
+  if (selectedCategory.value === "") {
+    return;
   }
- 
-  const results = [];
 
-  try {
-    const uploadsDirectory = path.join(process.cwd(), 'server', 'api', 'bdd', 'uploads');
+  const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+  const files = Array.from(input.files as FileList);
+  if (files.length === 0) {
+    alert("Veuillez sélectionner au moins un fichier.");
+    return;
+  }
 
-    for (const file of formData) {
-      const fileBuffer: Buffer = file.data;
-      
-      if (!file.filename) {
-        console.error('Le nom du fichier est indéfini.');
-        results.push({ name: 'undefined', success: false, error: 'Le nom du fichier est indéfini.' });
-        continue;
+  files.forEach((file) => {
+    depositedFiles.value.push({ name: file.name, category: selectedCategory.value, file });
+  });
+
+  input.value = "";
+};
+
+const removeFile = (index: number) => {
+  depositedFiles.value.splice(index, 1);
+};
+
+const sendFilesToServer = async () => {
+  const formData = new FormData();
+  let totalSize = 0;
+
+  depositedFiles.value.forEach((file, i) => {
+    formData.append("files" + i, file.file);
+    totalSize += file.file.size;
+  });
+
+  let uploadedSize = 0;
+
+  for (const file of depositedFiles.value) {
+    try {
+      const response = await useFetch("/api/bdd/depot", {
+        method: "POST",
+        body: formData,
+      });
+
+      const { data, error } = response;
+
+      if (error) {
+        throw new Error('Erreur lors de l\'envoi du fichier.');
       }
 
-      const filePath = path.join(uploadsDirectory, file.filename);
+      const result = data.value;
 
-      try {
-        fs.writeFileSync(filePath, fileBuffer);
-        results.push({ name: file.filename, success: true });
-      } catch (error) {
-        console.error(`Erreur lors de l'enregistrement du fichier: ${file.filename}`, error);
-        results.push({ name: file.filename, success: false, error: error.message });
-      }
+      result.files.forEach((resFile: any) => {
+        fileStatuses.value.push({
+          name: resFile.name,
+          status: resFile.success ? 'success' : 'error',
+          error: resFile.error,
+        });
+      });
+
+      uploadedSize += file.file.size;
+      const progress = (uploadedSize / totalSize) * 100;
+
+      const progressBar = document.querySelector(".progress-bar") as HTMLElement;
+      progressBar.style.transition = "width 0.1s ease";
+      progressBar.style.width = `${progress}%`;
+      progressBar.setAttribute("aria-valuenow", progress.toString());
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      fileStatuses.value.push({
+        name: file.name,
+        status: 'error',
+        error: errorMessage,
+      });
     }
 
-    return { message: 'Traitement terminé.', files: results };
-  } catch (error) {
-    console.error('Erreur lors de l\'enregistrement des fichiers :', error);
-    return { message: 'Erreur lors de l\'enregistrement des fichiers.', files: results };
+    formData.delete("files" + depositedFiles.value.indexOf(file));
   }
-});
+  alert("Fichiers envoyés avec succès");
+  depositedFiles.value = [];
+};
+</script>
+
+<style scoped>
+.bgg {
+  background-color: #ddd0c8;
+}
+
+.card {
+  background-color: #ebe7e7;
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.card-body {
+  padding: 1.5rem;
+  transition: transform 250ms;
+}
+.card-body:hover {
+  transform: translateY(-10px);
+}
+
+.card-body h6 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.card-body h6 button {
+  margin-left: 10px;
+}
+
+.badge {
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 50px;
+  background-color: #337ab7;
+  color: #fff;
