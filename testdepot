@@ -1,70 +1,158 @@
-back 
-import { NextApiRequest, NextApiResponse } from 'next';
-import multer from 'multer';
-import nc from 'next-connect';
+<script setup lang="ts">
+import { ref } from "vue";
 
-// Définir le middleware multer pour gérer les fichiers
-const upload = multer({ dest: 'uploads/' });
+const categories = ref<string[]>(["Catégorie 1", "Catégorie 2", "Catégorie 3"]);
+const selectedCategory = ref<string>("");
+const depositedFiles = ref<{ name: string; category: string; file: File }[]>([]);
+const fileStatuses = ref<{ name: string; status: string; error?: string }[]>([]);
 
-// Créer un gestionnaire d'API avec next-connect
-const handler = nc<NextApiRequest, NextApiResponse>();
+const uploadFiles = () => {
+  // (Le reste du code reste inchangé)
+};
 
-// Utiliser le middleware multer pour gérer les fichiers
-handler.use(upload.array('files'));
+const removeFile = (index: number) => {
+  depositedFiles.value.splice(index, 1);
+};
 
-// Route API pour gérer les fichiers déposés
-handler.post((req, res) => {
-  // Afficher les informations des fichiers dans la console
-  console.log('Infos des fichiers reçus :', req.files);
+const sendFilesToServer = async () => {
+  const formData = new FormData();
+  let totalSize = 0;
 
-  // Répondre au frontend
-  res.status(200).json({ message: 'Fichiers reçus avec succès' });
-});
+  depositedFiles.value.forEach((file, i) => {
+    formData.append("files" + i, file.file);
+    totalSize += file.file.size;
+  });
 
-export default handler;
+  let uploadedSize = 0;
 
-front 
+  for (const file of depositedFiles.value) {
+    try {
+      const response = await useFetch("/api/bdd/depot", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de l\'envoi du fichier.');
+      }
+
+      const result = await response.json();
+
+      result.files.forEach((resFile: any) => {
+        fileStatuses.value.push({
+          name: resFile.name,
+          status: resFile.success ? 'success' : 'error',
+          error: resFile.error,
+        });
+      });
+
+      uploadedSize += file.file.size;
+      const progress = (uploadedSize / totalSize) * 100;
+
+      const progressBar = document.querySelector(".progress-bar") as HTMLElement;
+      progressBar.style.transition = "width 0.1s ease";
+      progressBar.style.width = `${progress}%`;
+      progressBar.setAttribute("aria-valuenow", progress.toString());
+
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    } catch (error) {
+      console.error("Erreur lors de l'envoi des fichiers:", error);
+      fileStatuses.value.push({
+        name: file.name,
+        status: 'error',
+        error: error.message,
+      });
+    }
+
+    formData.delete("files" + depositedFiles.value.indexOf(file));
+  }
+  alert("Fichiers envoyés avec succès");
+  depositedFiles.value = [];
+};
+</script>
 <template>
   <div class="bgg">
     <div class="container">
       <h1>Déposer des fichiers</h1>
+
       <div class="row mt-4">
         <div class="col-md-6">
           <div class="card">
             <div class="card-body">
               <h5 class="card-title">Sélectionner les fichiers à déposer</h5>
-              <input type="file" class="form-control" id="inputGroupFile01" multiple @change="handleFileUpload($event)">
+
+              <input type="file" class="form-control" id="inputGroupFile01" multiple @change="uploadFiles" />
+
               <div class="mt-3">
                 <label for="categorySelect" class="form-label">Choisir la catégorie :</label>
                 <select class="form-select" id="categorySelect" v-model="selectedCategory">
                   <option value="">Sélectionner une catégorie</option>
+
                   <option v-for="category in categories" :value="category" :key="category">{{ category }}</option>
                 </select>
               </div>
+
               <button class="btn btn-primary mt-3" @click="uploadFiles">Déposer les fichiers</button>
             </div>
           </div>
         </div>
-        <div class="col-md-6">
-          <div class="card" v-if="depositedFiles.length > 0">
+
+        <div class="ICI">
+          <div class="card mt-3" v-if="depositedFiles.length > 0">
             <div class="card-body">
-              <h5 class="card-title">Fichiers déposés</h5>
-              <ul class="list-group">
-                <li v-for="(file, index) in depositedFiles" :key="index" class="list-group-item d-flex justify-content-between align-items-center">
-                  <div>
-                    <span>{{ file.name }}</span><br>
-                    <span class="badge bg-secondary">{{ file.category }}</span>
+              <h3 class="card-title d-flex justify-content-center">Fichiers déposés</h3>
+              <div class="row mt-4">
+                <div v-for="(file, index) in depositedFiles" :key="index" class="col-6 mb-5">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h6>
+                        {{ file.name }}
+                        <button class="btn btn-danger btn-sm" @click="removeFile(index)">Supprimer</button>
+                      </h6>
+                      <span class="badge bg-secondary">{{ file.category }}</span>
+                    </div>
                   </div>
-                  <button class="btn btn-danger btn-sm" @click="removeFile(index)">Supprimer</button>
-                </li>
-              </ul>
+                </div>
+              </div>
+
               <div class="d-flex justify-content-center">
                 <button class="btn btn-success mt-3" @click="sendFilesToServer">Envoyer les fichiers</button>
               </div>
+
+              <div>
+                <p class="mt-4"></p>
+
+                <div
+                  class="progress"
+                  role="progressbar"
+                  aria-label="Animated striped example"
+                  aria-valuenow="75"
+                  aria-valuemin="0"
+                  aria-valuemax="100"
+                >
+                  <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="alert alert-info mt-3" role="alert" v-else>
-            Aucun fichier déposé.
+
+          <div class="alert alert-info mt-4 w-50" role="alert" v-else>Aucun fichier déposé.</div>
+        </div>
+      </div>
+
+      <div class="row mt-4">
+        <div class="col-md-12">
+          <div class="card">
+            <div class="card-body">
+              <h3 class="card-title">Statut des fichiers envoyés</h3>
+              <ul>
+                <li v-for="status in fileStatuses" :key="status.name">
+                  <span>{{ status.name }}</span>
+                  <span v-if="status.status === 'success'" class="text-success">✔</span>
+                  <span v-if="status.status === 'error'" class="text-danger">❌ {{ status.error }}</span>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
@@ -72,75 +160,44 @@ front
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref } from 'vue';
+import fs from 'fs';
+import path from 'path';
 
-// Liste des catégories disponibles
-const categories = ref<string[]>(['Catégorie 1', 'Catégorie 2', 'Catégorie 3']);
-// Catégorie sélectionnée par l'utilisateur
-const selectedCategory = ref<string>('');
-// Liste des fichiers déposés
-const depositedFiles = ref<{ name: string; category: string }[]>([]);
-// Liste des fichiers à envoyer au backend
-const filesToSend = ref<File[]>([]);
+export default defineEventHandler(async (event) => {
+  const formData = await readMultipartFormData(event);
+  
+  if (formData === undefined || formData.length === 0) {
+    return { message: 'Aucun fichier trouvé.' };
+  }
+ 
+  const results = [];
 
-// Fonction pour gérer le téléchargement des fichiers
-const handleFileUpload = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  const files = target.files;
-  if (files) {
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      filesToSend.value.push(file);
-      depositedFiles.value.push({ name: file.name, category: selectedCategory.value });
+  try {
+    const uploadsDirectory = path.join(process.cwd(), 'server', 'api', 'bdd', 'uploads');
+
+    for (const file of formData) {
+      const fileBuffer: Buffer = file.data;
+      
+      if (!file.filename) {
+        console.error('Le nom du fichier est indéfini.');
+        results.push({ name: 'undefined', success: false, error: 'Le nom du fichier est indéfini.' });
+        continue;
+      }
+
+      const filePath = path.join(uploadsDirectory, file.filename);
+
+      try {
+        fs.writeFileSync(filePath, fileBuffer);
+        results.push({ name: file.filename, success: true });
+      } catch (error) {
+        console.error(`Erreur lors de l'enregistrement du fichier: ${file.filename}`, error);
+        results.push({ name: file.filename, success: false, error: error.message });
+      }
     }
+
+    return { message: 'Traitement terminé.', files: results };
+  } catch (error) {
+    console.error('Erreur lors de l\'enregistrement des fichiers :', error);
+    return { message: 'Erreur lors de l\'enregistrement des fichiers.', files: results };
   }
-};
-
-// Fonction pour déposer les fichiers dans la catégorie sélectionnée
-const uploadFiles = () => {
-  // Vérifier si une catégorie a été sélectionnée
-  if (selectedCategory.value === '') {
-    alert('Veuillez sélectionner une catégorie.');
-    return;
-  }
-
-  // Effacer les fichiers déposés de l'input file
-  const input = document.querySelector('input[type="file"]') as HTMLInputElement;
-  input.value = '';
-};
-
-// Fonction pour supprimer un fichier déposé
-const removeFile = (index: number) => {
-  depositedFiles.value.splice(index, 1);
-  filesToSend.value.splice(index, 1);
-};
-
-// Fonction pour envoyer les fichiers au backend
-const sendFilesToServer = () => {
-  const formData = new FormData();
-  filesToSend.value.forEach(file => {
-    formData.append('files', file);
-  });
-
-  fetch('/api/bdd/depot', {
-    method: 'POST',
-    body: formData
-  })
-  .then(response => response.json())
-  .then(data => {
-    console.log('Fichiers envoyés avec succès:', data);
-    // Réinitialiser la liste des fichiers à envoyer
-    filesToSend.value = [];
-  })
-  .catch(error => {
-    console.error('Erreur lors de l\'envoi des fichiers:', error);
-  });
-};
-</script>
-
-<style scoped>
-.bgg{
-  background-color: #ddd0c8;
-}
-</style>
+});
