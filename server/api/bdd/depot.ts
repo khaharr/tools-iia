@@ -1,36 +1,41 @@
+
 import fs from 'fs';
 import path from 'path';
 
 export default defineEventHandler(async (event) => {
   const formData = await readMultipartFormData(event);
   
-  if (formData === undefined || formData.length === 0) {
-    return { message: 'Aucun fichier trouvé.' };
+  if (!formData || formData.length === 0) {
+    return { message: 'Aucun fichier trouvé.', files: [] };
   }
- 
-  try {
-    // répertoire de téléchargement 
-    const uploadsDirectory = path.join(process.cwd(), 'server', 'api', 'bdd', 'uploads');
 
+  const uploadsDirectory = path.join(process.cwd(), 'server', 'api', 'bdd', 'uploads');
+  const resultFiles = [];
+
+  try {
     for (const file of formData) {
       const fileBuffer: Buffer = file.data;
-     // vérifie si le nom du fichier est défini
       if (!file.filename) {
-        console.error('Le nom du fichier est indéfini.');
+        const errorMessage = 'Le nom du fichier est indéfini.';
+        console.error(errorMessage);
+        resultFiles.push({ name: 'Indéfini', success: false, error: errorMessage });
         continue;
       }
 
       const filePath = path.join(uploadsDirectory, file.filename);
-
-      // Écrire le contenu brut du fichier dans le fichier de destination
-      fs.writeFileSync(filePath, fileBuffer);
-      // console.log(fileBuffer)
-      // console.log(`Fichier enregistré: ${file.filename}`);
+      try {
+        fs.writeFileSync(filePath, fileBuffer);
+        resultFiles.push({ name: file.filename, success: true });
+      } catch (error) {
+        const errorMessage = `Erreur lors de l'enregistrement du fichier: ${file.filename}`;
+        console.error(errorMessage, error);
+        resultFiles.push({ name: file.filename, success: false, error: errorMessage });
+      }
     }
 
-    return { message: 'Fichiers envoyés avec succès!' };
+    return { message: 'Fichiers traités.', files: resultFiles };
   } catch (error) {
     console.error('Erreur lors de l\'enregistrement des fichiers :', error);
-    return { message: 'Erreur lors de l\'enregistrement des fichiers.' };
+    return { message: 'Erreur lors de l\'enregistrement des fichiers.', files: resultFiles };
   }
 });

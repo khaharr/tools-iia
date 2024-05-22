@@ -71,7 +71,7 @@ const dateTo = ref(null);
 // Cette fonction est exécutée lorsque le composant est monté
 onMounted(async () => {
   // Récupération des données de l'API
-  const response = await fetch('/api/bdd/bdd');
+  const response = await fetch('/api/bdd/tableau');
   const data = await response.json();
 
   console.log("Data Récupéré de l'API:", data);
@@ -156,7 +156,8 @@ const generateFile = async () => {
   const url = window.URL.createObjectURL(blob);//crée une URL temporaire pour le blob.
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'fichier.zip';
+
+  a.download = 'FichiersPaiement.zip';
   document.body.appendChild(a);
   a.click();
   a.remove();
