@@ -55,6 +55,9 @@
             Générer Fichier
           </button>
         </div>
+        <div v-if="errorMessage" class="alert alert-danger" role="alert">
+          {{ errorMessage }}
+        </div>
       </div>
     </div>
   </div>
@@ -70,24 +73,32 @@ const dateTo = ref(null);
 
 // Cette fonction est exécutée lorsque le composant est monté
 onMounted(async () => {
-  // Récupération des données de l'API
-  const response = await fetch('/api/bdd/tableau');
-  const data = await response.json();
+  try {
+    // Récupération des données de l'API
+    const response = await fetch('/api/bdd/tableau');
+    if (!response.ok) {
+      throw new Error(errorData.statusMessage || 'Erreur lors de la récupération des données');
+    }
 
-  console.log("Data Récupéré de l'API:", data);
+    const data = await response.json();
+    console.log("Data récupérées de l'API:", data);
 
-  // Vérification si les données récupérées sont un tableau non vide
-  if (Array.isArray(data) && data.length > 0) {
-    items.value = data; // Mise à jour des items avec les données récupérées
-    console.log("Items données", items.value);
+    // Vérification si les données récupérées sont un tableau non vide
+    if (Array.isArray(data) && data.length > 0) {
+      items.value = data; // Mise à jour des items avec les données récupérées
+      console.log("Items données", items.value);
 
-    // Initialisation du tableau Bootstrap avec les données récupérées
-    const table = $('#table');
-    table.bootstrapTable({
-      data: items.value,
-    });
-  } else {
-    console.error("donnée de data n'est pas un array");
+      // Initialisation du tableau Bootstrap avec les données récupérées
+      const table = $('#table');
+      table.bootstrapTable({
+        data: items.value,
+      });
+    } else {
+      console.error("Données récupérées non valides");
+    }
+  } catch (error) {
+    console.error('Erreur lors de la récupération des données:', error.message);
+    errorMessage.value = 'Erreur lors de la récupération des données. Veuillez réessayer plus tard.',error.message ;
   }
 });
 
@@ -128,39 +139,43 @@ const applyDateFilter = () => {
 
 // Fonction pour générer et télécharger un fichier ZIP contenant les fichiers sélectionnés
 const generateFile = async () => {
-  const selectedRows = $('#table').bootstrapTable('getSelections'); // Récupération des lignes sélectionnées du tableau
-  if (selectedRows.length === 0) {
-    alert('Veuillez sélectionner au moins un fichier.');
-    return;
-  }
+  try {
+    const selectedRows = $('#table').bootstrapTable('getSelections');
+    if (selectedRows.length === 0) {
+      alert('Veuillez sélectionner au moins un fichier.');
+      return;
+    }
 
-  // Récupération des noms de fichiers sélectionnés
-  const filenames = selectedRows.map(row => row.nomfichier);
+    const filenames = selectedRows.map(row => row.nomfichier);
 
-  // Envoi des noms de fichiers au serveur pour générer le fichier ZIP
-  const response = await fetch('/api/bdd/donload', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ filenames }),
-  });
+    const response = await fetch('/api/bdd/donload', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ filenames }),
+    });
 
-  if (!response.ok) {
-    alert('Erreur lors du téléchargement des fichiers.');
-    return;
-  }
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.statusMessage || 'Erreur lors du téléchargement des fichiers.');
+    }
+
 
   // Téléchargement du fichier ZIP généré
+  
   const blob = await response.blob();
-  const url = window.URL.createObjectURL(blob);//crée une URL temporaire pour le blob.
-  const a = document.createElement('a');
-  a.href = url;
-
-  a.download = 'FichiersPaiement.zip';
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'FichiersPaiement.zip';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } catch (error) {
+    console.error('Erreur lors de la génération du fichier ZIP:', error.message);
+    errorMessage.value = error.message;
+  }
 };
 </script>
 
