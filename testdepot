@@ -1,6 +1,6 @@
 <template>
   <div class="bgg">
-    <div class="container ">
+    <div class="container">
       <h1>Déposer des fichiers</h1>
 
       <div class="row mt-4">
@@ -24,14 +24,14 @@
           </div>
         </div>
 
-        <div class="ICI">
+        <div class="col-md-6">
           <div class="card mt-3" v-if="depositedFiles.length > 0">
-            <div class="card-body ">
-              <h3 class="card-title d-flex d-flex justify-content-center">Fichiers déposés</h3>
+            <div class="card-body">
+              <h3 class="card-title">Fichiers déposés</h3>
               <div class="row mt-4">
                 <div v-for="(file, index) in depositedFiles" :key="index" class="col-6 mb-5">
                   <div class="card h-100">
-                    <div class="card-body ">
+                    <div class="card-body">
                       <h6>
                         {{ file.name }}
                         <button class="btn btn-danger btn-sm" @click="removeFile(index)">Supprimer</button>
@@ -46,35 +46,26 @@
                 <button class="btn btn-success mt-3" @click="sendFilesToServer">Envoyer les fichiers</button>
               </div>
 
-              <div>
-                <p class="mt-4"></p>
-
-                <div
-                  class="progress"
-                  role="progressbar"
-                  aria-label="Animated striped example"
-                  aria-valuenow="75"
-                  aria-valuemin="0"
-                  aria-valuemax="100"
-                >
+              <div class="mt-4">
+                <div class="progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
                   <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
                 </div>
-              </div>
-
-              <div v-if="fileStatuses.length > 0" class="mt-4">
-                <h5>Statut des fichiers envoyés</h5>
-                <ul>
-                  <li v-for="status in fileStatuses" :key="status.name">
-                    <span>{{ status.name }} - </span>
-                    <span v-if="status.success" class="text-success">✔️ Envoyé</span>
-                    <span v-else class="text-danger">❌ {{ status.error }}</span>
-                  </li>
-                </ul>
               </div>
             </div>
           </div>
 
           <div class="alert alert-info mt-4 w-50" role="alert" v-else>Aucun fichier déposé.</div>
+
+          <div class="mt-4" v-if="fileStatuses.length > 0">
+            <h3>Statuts des fichiers envoyés</h3>
+            <ul class="list-group">
+              <li v-for="(status, index) in fileStatuses" :key="index" :class="{'list-group-item-success': status.success, 'list-group-item-danger': !status.success}" class="list-group-item d-flex justify-content-between align-items-center">
+                {{ status.name }}
+                <span v-if="status.success" class="badge bg-success">✔️</span>
+                <span v-else class="badge bg-danger">❌ {{ status.error }}</span>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -83,12 +74,12 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { useFetch } from "nuxt/app"; // Assurez-vous d'avoir installé le module Nuxt 3 pour ce type d'utilisation
 
 const categories = ref<string[]>(["Catégorie 1", "Catégorie 2", "Catégorie 3"]);
 const selectedCategory = ref<string>("");
 const depositedFiles = ref<{ name: string; category: string; file: File }[]>([]);
 const fileStatuses = ref<{ name: string; success: boolean; error?: string }[]>([]);
-const uploadedFiles = ref<File[]>([]);
 
 const uploadFiles = () => {
   if (selectedCategory.value === "") {
@@ -126,134 +117,39 @@ const sendFilesToServer = async () => {
   let uploadedSize = 0;
   fileStatuses.value = []; // Reset file statuses
 
+  const progressBar = document.querySelector(".progress-bar") as HTMLElement;
+
   try {
-    const response = await fetch("/api/bdd/depot", {
+    const response = await useFetch("/api/bdd/depot", {
       method: "POST",
       body: formData,
     });
 
-    if (!response.ok) {
-      throw new Error("Erreur lors de l'envoi des fichiers.");
-    }
-
-    const result = await response.json();
+    const result = response.data.value;
     if (result && result.files) {
       result.files.forEach((fileStatus: { name: string; success: boolean; error?: string }) => {
         fileStatuses.value.push(fileStatus);
         if (fileStatus.success) {
           uploadedSize += depositedFiles.value.find(file => file.name === fileStatus.name)?.file.size || 0;
         }
+        const progress = (uploadedSize / totalSize) * 100;
+        progressBar.style.transition = "width 0.1s ease";
+        progressBar.style.width = `${progress}%`;
+        progressBar.setAttribute("aria-valuenow", progress.toString());
       });
-
-      const progress = (uploadedSize / totalSize) * 100;
-      const progressBar = document.querySelector(".progress-bar") as HTMLElement;
-      progressBar.style.transition = "width 0.1s ease";
-      progressBar.style.width = `${progress}%`;
-      progressBar.setAttribute("aria-valuenow", progress.toString());
+    } else {
+      throw new Error("Réponse invalide du serveur.");
     }
   } catch (error) {
     console.error("Erreur lors de l'envoi des fichiers:", error);
     fileStatuses.value.push({ name: "Erreur globale", success: false, error: error instanceof Error ? error.message : String(error) });
+  } finally {
+    depositedFiles.value = [];
+    setTimeout(() => {
+      progressBar.style.width = '0%'; // Réinitialiser la barre de progression
+    }, 5000); // Délai de 5 secondes avant de réinitialiser la barre de progression
   }
 
   alert("Envoi terminé. Voir les statuts pour plus de détails.");
 };
 </script>
-
-<style scoped>
-.bgg {
-  background-color: #ddd0c8;
-}
-
-.card {
-  background-color: #ebe7e7;
-  border: none;
-  border-radius: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.card-body {
-  padding: 1.5rem;
-  transition: transform 250ms;
-}
-.card-body:hover {
-  transform: translateY(-10px);
-}
-
-.card-body h6 {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.card-body h6 button {
-  margin-left: 10px;
-}
-
-.badge {
-  font-size: 12px;
-  padding: 5px 10px;
-  border-radius: 50px;
-  background-color: #337ab7;
-  color: #fff;
-}
-
-.badge.bg-secondary {
-  background-color: #6c757d;
-}
-
-.alert-info {
-  background-color: #d9edf7;
-  color: #31708f;
-  border-color: #bce8f1;
-}
-
-.text-success {
-  color: green;
-}
-
-.text-danger {
-  color: red;
-}
-</style>
-
-import fs from 'fs';
-import path from 'path';
-import { defineEventHandler, readMultipartFormData } from 'h3';
-
-export default defineEventHandler(async (event) => {
-  const formData = await readMultipartFormData(event);
-  
-  if (!formData || formData.length === 0) {
-    return { message: 'Aucun fichier trouvé.', files: [] };
-  }
-
-  const uploadsDirectory = path.join(process.cwd(), 'server', 'api', 'bdd', 'uploads');
-  const resultFiles = [];
-
-  try {
-    for (const file of formData) {
-      const fileBuffer: Buffer = file.data;
-      if (!file.filename) {
-        const errorMessage = 'Le nom du fichier est indéfini.';
-        console.error(errorMessage);
-        resultFiles.push({ name: 'Indéfini', success: false, error: errorMessage });
-        continue;
-      }
-
-      const filePath = path.join(uploadsDirectory, file.filename);
-      try {
-        fs.writeFileSync(filePath, fileBuffer);
-        resultFiles.push({ name: file.filename, success: true });
-      } catch (error) {
-        const errorMessage = `Erreur lors de l'enregistrement du fichier: ${file.filename}`;
-        console.error(errorMessage, error);
-        resultFiles.push({ name: file.filename, success: false, error: errorMessage });
-      }
-    }
-
-    return { message: 'Fichiers traités.', files: resultFiles };
-  } catch (error) {
-    console.error('Erreur lors de l\'enregistrement des fichiers :', error);
-    return { message: 'Erreur lors de l\'enregistrement des fichiers.', files: resultFiles };
-  }
-});
