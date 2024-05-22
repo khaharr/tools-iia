@@ -47,7 +47,7 @@
               </div>
 
               <div class="mt-4">
-                <div class="progress" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
                   <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
                 </div>
               </div>
@@ -55,23 +55,22 @@
           </div>
 
           <div class="alert alert-info mt-4 w-50" role="alert" v-else>Aucun fichier déposé.</div>
-
-          <div class="mt-4" v-if="fileStatuses.length > 0">
-            <h3>Statuts des fichiers envoyés</h3>
-            <ul class="list-group">
-              <li v-for="(status, index) in fileStatuses" :key="index" :class="{'list-group-item-success': status.success, 'list-group-item-danger': !status.success}" class="list-group-item d-flex justify-content-between align-items-center">
-                {{ status.name }}
-                <span v-if="status.success" class="badge bg-success">✔️</span>
-                <span v-else class="badge bg-danger">❌ {{ status.error }}</span>
-              </li>
-            </ul>
-          </div>
         </div>
+      </div>
+
+      <div class="mt-4" v-if="fileStatuses.length > 0">
+        <h3>Statuts des fichiers envoyés</h3>
+        <ul class="list-group">
+          <li v-for="(status, index) in fileStatuses" :key="index" :class="{'list-group-item-success': status.success, 'list-group-item-danger': !status.success}" class="list-group-item d-flex justify-content-between align-items-center">
+            {{ status.name }}
+            <span v-if="status.success" class="badge bg-success">✔️</span>
+            <span v-else class="badge bg-danger">❌ {{ status.error }}</span>
+          </li>
+        </ul>
       </div>
     </div>
   </div>
 </template>
-
 <script setup lang="ts">
 import { ref } from "vue";
 import { useFetch } from "nuxt/app"; // Assurez-vous d'avoir installé le module Nuxt 3 pour ce type d'utilisation
@@ -120,26 +119,29 @@ const sendFilesToServer = async () => {
   const progressBar = document.querySelector(".progress-bar") as HTMLElement;
 
   try {
-    const response = await useFetch("/api/bdd/depot", {
-      method: "POST",
-      body: formData,
-    });
-
-    const result = response.data.value;
-    if (result && result.files) {
-      result.files.forEach((fileStatus: { name: string; success: boolean; error?: string }) => {
-        fileStatuses.value.push(fileStatus);
-        if (fileStatus.success) {
-          uploadedSize += depositedFiles.value.find(file => file.name === fileStatus.name)?.file.size || 0;
-        }
-        const progress = (uploadedSize / totalSize) * 100;
-        progressBar.style.transition = "width 0.1s ease";
-        progressBar.style.width = `${progress}%`;
-        progressBar.setAttribute("aria-valuenow", progress.toString());
+    for (const file of depositedFiles.value) {
+      formData.append("file", file.file);
+      const response = await useFetch("/api/bdd/depot", {
+        method: "POST",
+        body: formData,
       });
-    } else {
-      throw new Error("Réponse invalide du serveur.");
+
+      if (response.error.value) {
+        throw new Error(response.error.value);
+      }
+
+      uploadedSize += file.file.size;
+      const progress = (uploadedSize / totalSize) * 100;
+      progressBar.style.width = `${progress}%`;
+      progressBar.setAttribute("aria-valuenow", progress.toString());
+
+      fileStatuses.value.push({ name: file.name, success: true });
+
+      // Remove the file from formData after uploading
+      formData.delete("file");
     }
+
+    alert("Envoi terminé. Voir les statuts pour plus de détails.");
   } catch (error) {
     console.error("Erreur lors de l'envoi des fichiers:", error);
     fileStatuses.value.push({ name: "Erreur globale", success: false, error: error instanceof Error ? error.message : String(error) });
@@ -149,7 +151,5 @@ const sendFilesToServer = async () => {
       progressBar.style.width = '0%'; // Réinitialiser la barre de progression
     }, 5000); // Délai de 5 secondes avant de réinitialiser la barre de progression
   }
-
-  alert("Envoi terminé. Voir les statuts pour plus de détails.");
 };
 </script>
