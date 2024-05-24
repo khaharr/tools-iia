@@ -43,7 +43,7 @@
           <thead class="table-dark">
             <tr>
               <th data-checkbox="true" data-field="check"></th>
-              <th data-field="id">ID</th>
+              <th data-field="id"  data-searchable="false">ID</th>
               <th data-field="nomfichier" data-searchable="true" data-click-to-select="true">Nom fichier</th>
               <th data-field="category" data-filter-control="select">Catégorie</th>
               <th data-field="date" data-sortable="true" data-searchable="false">Date mise en ligne</th>
