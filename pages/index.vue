@@ -65,7 +65,6 @@
 
 <script setup lang="ts">
 
-
 // Interface pour les items
 interface Item {
   id: number;
@@ -78,6 +77,7 @@ const items: Ref<Item[]> = ref([]);
 const dateFrom: Ref<string | null> = ref(null);
 const dateTo: Ref<string | null> = ref(null);
 const errorMessage: Ref<string | null> = ref(null);
+
 
 onMounted(async () => {
   try {
