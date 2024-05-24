@@ -63,32 +63,38 @@
   </div>
 </template>
 
-<script setup>
-import { onMounted, ref } from 'vue';
+<script setup lang="ts">
+import { onMounted, ref, type Ref } from 'vue';
+import 'bootstrap';
 
-// Déclaration des références réactives pour les items, la date de début et la date de fin
-const items = ref([]);
-const dateFrom = ref(null);
-const dateTo = ref(null);
+// Interface pour les items
+interface Item {
+  id: number;
+  nomfichier: string;
+  category: string;
+  date: string;
+}
 
-// Cette fonction est exécutée lorsque le composant est monté
+const items: Ref<Item[]> = ref([]);
+const dateFrom: Ref<string | null> = ref(null);
+const dateTo: Ref<string | null> = ref(null);
+const errorMessage: Ref<string | null> = ref(null);
+
 onMounted(async () => {
   try {
-    // Récupération des données de l'API
     const response = await fetch('/api/bdd/tableau');
     if (!response.ok) {
+      const errorData = await response.json();
       throw new Error(errorData.statusMessage || 'Erreur lors de la récupération des données');
     }
 
-    const data = await response.json();
+    const data: Item[] = await response.json();
     console.log("Data récupérées de l'API:", data);
 
-    // Vérification si les données récupérées sont un tableau non vide
     if (Array.isArray(data) && data.length > 0) {
-      items.value = data; // Mise à jour des items avec les données récupérées
+      items.value = data;
       console.log("Items données", items.value);
 
-      // Initialisation du tableau Bootstrap avec les données récupérées
       const table = $('#table');
       table.bootstrapTable({
         data: items.value,
@@ -96,51 +102,45 @@ onMounted(async () => {
     } else {
       console.error("Données récupérées non valides");
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erreur lors de la récupération des données:', error.message);
-    errorMessage.value = 'Erreur lors de la récupération des données. Veuillez réessayer plus tard.',error.message ;
+    errorMessage.value = 'Erreur lors de la récupération des données. Veuillez réessayer plus tard. ' + error.message;
   }
 });
 
-// Fonction pour appliquer un filtre de date au tableau
 const applyDateFilter = () => {
   const table = $('#table');
-  table.bootstrapTable('load', items.value); // Rechargement des données du tableau
+  table.bootstrapTable('load', items.value);
   table.bootstrapTable(
     'filterBy',
     {},
     {
-      filterAlgorithm: (row, filters) => {
+      filterAlgorithm: (row: Item, filters: any) => {
         const itemDate = new Date(row.date);
         const fromDate = dateFrom.value ? new Date(dateFrom.value) : null;
         const toDate = dateTo.value ? new Date(dateTo.value) : null;
 
-        // Si aucune date de début et de fin n'est sélectionnée, aucun filtre n'est appliqué
         if (!fromDate && !toDate) {
           return true;
         }
 
-        // Si seule la date de fin est sélectionnée, filtrer les éléments jusqu'à cette date
         if (!fromDate) {
-          return itemDate <= toDate;
+          return itemDate <= toDate!;
         }
 
-        // Si seule la date de début est sélectionnée, filtrer les éléments à partir de cette date
         if (!toDate) {
-          return itemDate >= fromDate;
+          return itemDate >= fromDate!;
         }
 
-        // Si les deux dates sont sélectionnées, filtrer les éléments dans cet intervalle
         return itemDate >= fromDate && itemDate <= toDate;
       },
     }
   );
 };
 
-// Fonction pour générer et télécharger un fichier ZIP contenant les fichiers sélectionnés
 const generateFile = async () => {
   try {
-    const selectedRows = $('#table').bootstrapTable('getSelections');
+    const selectedRows = $('#table').bootstrapTable('getSelections') as Item[];
     if (selectedRows.length === 0) {
       alert('Veuillez sélectionner au moins un fichier.');
       return;
@@ -161,10 +161,7 @@ const generateFile = async () => {
       throw new Error(errorData.statusMessage || 'Erreur lors du téléchargement des fichiers.');
     }
 
-
-  // Téléchargement du fichier ZIP généré
-  
-  const blob = await response.blob();
+    const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -172,9 +169,9 @@ const generateFile = async () => {
     document.body.appendChild(a);
     a.click();
     a.remove();
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erreur lors de la génération du fichier ZIP:', error.message);
-    errorMessage.value = error.message;
+    errorMessage.value = 'Erreur lors de la génération du fichier ZIP. ' + error.message;
   }
 };
 </script>
@@ -204,7 +201,7 @@ const generateFile = async () => {
   line-height: 1.5;
 }
 
-.table{
+.table {
   background-color: rgb(231, 231, 231);
 }
 .filter-title {
@@ -234,6 +231,6 @@ h1 {
 
 .bgg {
   background-color: #ddd0c8;
-    padding-bottom: 20px; /* Ajout d'un espace en bas */
+  padding-bottom: 20px;
 }
 </style>
