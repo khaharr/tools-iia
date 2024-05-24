@@ -112,7 +112,7 @@ const sendFilesToServer = async () => {
   });
 
   let uploadedSize = 0;
-  fileStatuses.value = []; // Reset statuses
+  fileStatuses.value = []; // Reset status
 
   const progressBar = document.querySelector(".progress-bar") as HTMLElement;
 

@@ -52,7 +52,7 @@
         </table>
         <div class="text-center mb-4">
           <button class="btn btn-primary validerCouleur " @click="generateFile" type="button" id="inputGroupFileAddon04" data-dismiss="alert">
-            Générer Fichier
+            Générer Fichiers
           </button>
         </div>
         <div v-if="errorMessage" class="alert alert-danger" role="alert">
@@ -204,6 +204,9 @@ const generateFile = async () => {
   line-height: 1.5;
 }
 
+.table{
+  background-color: rgb(231, 231, 231);
+}
 .filter-title {
   color: rgb(0, 0, 0);
   animation: slide-in 0.5s ease-in-out;
