@@ -1,6 +1,7 @@
 //https://nuxt.com/docs/api/nuxt-config
 export default defineNuxtConfig({
   ssr:false,
+  devtools: { enabled: true },
   css: ["bootstrap/dist/css/bootstrap.min.css",
   "bootstrap-icons/font/bootstrap-icons.min.css",
   "bootstrap-table/dist/bootstrap-table.min.css"
@@ -12,7 +13,6 @@ export default defineNuxtConfig({
   },
   
   app: {
-    
     pageTransition: { name: 'page', mode: 'out-in' },
     head: {
       script: [
@@ -26,4 +26,11 @@ export default defineNuxtConfig({
   },
 });
 
-
+// export default defineNuxtConfig({
+//   ssr:true,
+//   devtools: { enabled: true },
+//   css: ["bootstrap/dist/css/bootstrap.min.css",
+//   "bootstrap-icons/font/bootstrap-icons.min.css",
+//   "bootstrap-table/dist/bootstrap-table.min.css"
+//   ]
+// });
