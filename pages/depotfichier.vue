@@ -57,7 +57,7 @@
           <div class="alert alert-info mt-4 w-50" role="alert" v-else>Aucun fichier déposé.</div>
         </div>
       </div>
-
+      
       <div class="mt-4" v-if="fileStatuses.length > 0">
         <h3>Statuts des fichiers envoyés</h3>
         <ul class="list-group">

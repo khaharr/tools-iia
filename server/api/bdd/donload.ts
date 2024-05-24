@@ -15,14 +15,14 @@ export default defineEventHandler(async (event) => {
   }
 
   const uploadDir = path.join(process.cwd(), 'server', 'api', 'bdd', 'uploads');
-  const zipFilePath = path.join(uploadDir, 'fichier.zip');
+  const zipFilePath = path.join( 'zipfiles','fichier.zip');
 
   try {
     console.log("Création de l'archive...");
     // Créer un fichier pour diffuser les données de l'archive.
     const output = fs.createWriteStream(zipFilePath);
     const archive = archiver('zip', {
-      zlib: { level: 9 } // Définir le niveau de compression.
+      zlib: { level: 9 } //niveau de compression.
     });
 
     output.on('close', () => {
