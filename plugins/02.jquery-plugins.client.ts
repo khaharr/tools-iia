@@ -1,3 +1,5 @@
+// npm i tableexport.jquery.plugin
+
 import 'tableexport.jquery.plugin/tableExport.min.js'
 import 'tableexport.jquery.plugin/libs/jsPDF/jspdf.umd.min.js'
 import 'tableexport.jquery.plugin/libs/FileSaver/FileSaver.min.js'
