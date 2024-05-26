@@ -57,7 +57,7 @@
           <div class="alert alert-info mt-4 w-50" role="alert" v-else>Aucun fichier déposé.</div>
         </div>
       </div>
-      
+
       <div class="mt-4" v-if="fileStatuses.length > 0">
         <h3>Statuts des fichiers envoyés</h3>
         <ul class="list-group">
@@ -68,6 +68,7 @@
           </li>
         </ul>
       </div>
+      
     </div>
   </div>
 </template>
@@ -103,31 +104,30 @@ const removeFile = (index: number) => {
 };
 
 const sendFilesToServer = async () => {
-  const formData = new FormData();
-  let totalSize = 0;
+  const progressBar = document.querySelector(".progress-bar") as HTMLElement;
+  fileStatuses.value = []; // Reset status
 
-  depositedFiles.value.forEach((file, i) => {
-    formData.append("files" + i, file.file);
+  let totalSize = 0;
+  let uploadedSize = 0;
+
+  depositedFiles.value.forEach(file => {
     totalSize += file.file.size;
   });
 
-  let uploadedSize = 0;
-  fileStatuses.value = []; // Reset status
+  for (const file of depositedFiles.value) {
+    const formData = new FormData();
+    formData.append("file", file.file);
 
-  const progressBar = document.querySelector(".progress-bar") as HTMLElement;
-
-  try {
-    for (const file of depositedFiles.value) {
-      formData.append("file", file.file);
-
+    try {
       const response = await fetch("/api/bdd/depot", {
         method: "POST",
         body: formData,
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Erreur inconnue');
+      const responseData = await response.json();
+
+      if (!response.ok || !responseData.success) {
+        throw new Error(responseData.message || 'Erreur inconnue');
       }
 
       uploadedSize += file.file.size;
@@ -135,21 +135,35 @@ const sendFilesToServer = async () => {
       progressBar.style.width = `${progress}%`;
       progressBar.setAttribute("aria-valuenow", progress.toString());
 
-      fileStatuses.value.push({ name: file.name, success: true });
-      //supprimé les fichiers aprés uppload
-      formData.delete("file");
+      fileStatuses.value.push({
+        name: file.name,
+        success: true,
+      });
+    } catch (error) {
+      console.error("Erreur lors de l'envoi des fichiers:", error);
+      fileStatuses.value.push({
+        name: file.name,
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
-    alert("fichier envoyé avec succés")
-  } catch (error) {
-    console.error("Erreur lors de l'envoi des fichiers:", error);
-    fileStatuses.value.push({ name: "Erreur ", success: false, error: error instanceof Error ? error.message : String(error) });
-  } finally {
-    depositedFiles.value = [];
-    setTimeout(() => {
-      progressBar.style.width = '0%'; // Réinitialiser la barre de progression
-    }, 5000); // Délai de 5 secondes avant de réinitialiser la barre de progression
   }
+
+  //  une seconde pour s'assurer que la barre de progression atteint 100%
+  setTimeout(() => {
+    if (fileStatuses.value.every(status => status.success)) {
+      alert("Fichiers envoyés avec succès");
+    } else {
+      alert("Certains fichiers n'ont pas été envoyés correctement");
+    }
+
+    depositedFiles.value = [];
+    progressBar.style.width = '0%'; // Réinitialiser la barre de progression
+  }, 1000); // Délai de 1 seconde avant d'afficher l'alerte
 };
+
+
+
 </script>
 
 

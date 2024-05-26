@@ -1,16 +1,26 @@
-
 import fs from 'fs';
 import path from 'path';
 
 export default defineEventHandler(async (event) => {
   const formData = await readMultipartFormData(event);
-  
+
   if (!formData || formData.length === 0) {
-    return { message: 'Aucun fichier trouvé.', files: [] };
+    return { message: 'Aucun fichier trouvé.', success: false, files: [] };
   }
 
   const uploadsDirectory = path.join(process.cwd(), 'server', 'api', 'bdd', 'uploads');
-  const resultFiles = [];
+  const resultFiles: { name: string; success: boolean; error?: string; }[] = [];
+
+  // Créer le répertoire s'il n'existe pas
+  try {
+    if (!fs.existsSync(uploadsDirectory)) {
+      fs.mkdirSync(uploadsDirectory, { recursive: true });
+    }
+  } catch (error) {
+    const errorMessage = `Erreur lors de la création du répertoire de destination "${uploadsDirectory}".`;
+    console.error(errorMessage, error);
+    return { message: errorMessage, success: false, files: resultFiles };
+  }
 
   try {
     for (const file of formData) {
@@ -33,9 +43,9 @@ export default defineEventHandler(async (event) => {
       }
     }
 
-    return { message: 'Fichiers traités.', files: resultFiles };
+    return { message: 'Fichiers traités.', success: true, files: resultFiles };
   } catch (error) {
     console.error('Erreur lors de l\'enregistrement des fichiers :', error);
-    return { message: 'Erreur lors de l\'enregistrement des fichiers.', files: resultFiles };
+    return { message: 'Erreur lors de l\'enregistrement des fichiers.', success: false, files: resultFiles };
   }
 });

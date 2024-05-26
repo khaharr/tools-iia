@@ -107,35 +107,37 @@ onMounted(async () => {
   }
 });
 
-const applyDateFilter = () => {
-  const table = $('#table');
+const applyDateFilter = function() {
+  var table = $('#table');
   table.bootstrapTable('load', items.value);
   table.bootstrapTable(
     'filterBy',
     {},
     {
-      filterAlgorithm: (row: Item, filters: any) => {
-        const itemDate = new Date(row.date);
-        const fromDate = dateFrom.value ? new Date(dateFrom.value) : null;
-        const toDate = dateTo.value ? new Date(dateTo.value) : null;
+      filterAlgorithm: function(row: { date: string | number | Date; }, filters: any) {
+        var itemDate = new Date(row.date);
+        var fromDate = dateFrom.value ? new Date(dateFrom.value) : null;
+        var toDate = dateTo.value ? new Date(dateTo.value) : null;
 
-        if (!fromDate && !toDate) {
+        if (fromDate === null && toDate === null) {
           return true;
         }
 
-        if (!fromDate) {
-          return itemDate <= toDate!;
+        if (fromDate === null) {
+          return toDate !== null && itemDate <= toDate;
         }
 
-        if (!toDate) {
-          return itemDate >= fromDate!;
+        if (toDate === null) {
+          return itemDate >= fromDate;
         }
 
         return itemDate >= fromDate && itemDate <= toDate;
-      },
+      }
     }
   );
 };
+
+
 
 const generateFile = async () => {
   try {
