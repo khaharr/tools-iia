@@ -25,7 +25,6 @@
           </div>
         </div>
       </div>
-
       <div class="w-75 m-auto">
         <table
           id="table"
@@ -72,7 +71,7 @@ interface Item {
   category: string;
   date: string;
 }
-
+//variables pour filtre dates, gestion message d'erreur et caractéristique du tableau
 const items: Ref<Item[]> = ref([]);
 const dateFrom: Ref<string | null> = ref(null);
 const dateTo: Ref<string | null> = ref(null);
@@ -161,7 +160,7 @@ const generateFile = async () => {
       const errorData = await response.json();
       throw new Error(errorData.statusMessage || 'Erreur lors du téléchargement des fichiers.');
     }
-
+    //générer fichier zip 
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');

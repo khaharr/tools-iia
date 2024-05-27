@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   if (!formData || formData.length === 0) {
     return { message: 'Aucun fichier trouvé.', success: false, files: [] };
   }
-
+  //emplacement dépot de fichier dans le répértoire
   const uploadsDirectory = path.join(process.cwd(), 'server', 'api', 'bdd', 'uploads');
   const resultFiles: { name: string; success: boolean; error?: string; }[] = [];
 
@@ -21,7 +21,7 @@ export default defineEventHandler(async (event) => {
     console.error(errorMessage, error);
     return { message: errorMessage, success: false, files: resultFiles };
   }
-
+  //gestion d'erreur
   try {
     for (const file of formData) {
       const fileBuffer: Buffer = file.data;
