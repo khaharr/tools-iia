@@ -1,0 +1,143 @@
+depot.ts import fs from 'fs';
+import path from 'path';
+import { SFTPClient } from '~/services/sftp.service';
+
+export default defineEventHandler(async (event) => {
+  const formData = await readMultipartFormData(event);
+
+  if (!formData || formData.length === 0) {
+    return { message: 'Aucun fichier trouvé.', success: false, files: [] };
+  }
+  //emplacement dépot de fichier dans le répértoire
+  const uploadsDirectory = path.join(process.cwd(),'tmp' ,'uploads');
+   const remoteFilePath = '/tmp/test' ;
+  const resultFiles: { name: string; success: boolean; error?: string; }[] = [];
+  const sftp = new SFTPClient()
+  
+  try {
+     
+        await sftp.connect({ host: 'tpiiusa003' })
+
+                // Créer le répertoire s'il n'existe pas
+                try {
+                    if (!fs.existsSync(uploadsDirectory)) {
+                    fs.mkdirSync(uploadsDirectory, { recursive: true });
+                    }
+                } catch (error) {
+                    const errorMessage = `Erreur lors de la création du répertoire de destination "${uploadsDirectory}".`;
+                    console.error(errorMessage, error);
+                    return { message: errorMessage, success: false, files: resultFiles };
+                }
+                //gestion d'erreur
+                try {
+                    for (const file of formData) {
+                    const fileBuffer: Buffer = file.data;
+                    if (!file.filename) {
+                        const errorMessage = 'Le nom du fichier est indéfini.';
+                        console.error(errorMessage);
+                        resultFiles.push({ name: 'Indéfini', success: false, error: errorMessage });
+                        continue;
+                    }
+
+                    const filePath = path.join(uploadsDirectory, file.filename);
+
+                    try {
+                        fs.writeFileSync(filePath, fileBuffer);
+                        await sftp.uploadFile(filePath, remoteFilePath  )
+                        resultFiles.push({ name: file.filename, success: true });
+                    } catch (error) {
+                        const errorMessage = `Erreur lors de l'enregistrement du fichier: ${file.filename}`;
+                        console.error(errorMessage, error);
+                        resultFiles.push({ name: file.filename, success: false, error: errorMessage });
+                    }
+                    }
+
+                    return { message: 'Fichiers traités.', success: true, files: resultFiles };
+                } catch (error) {
+                    console.error('Erreur lors de l\'enregistrement des fichiers :', error);
+                    return { message: 'Erreur lors de l\'enregistrement des fichiers.', success: false, files: resultFiles };
+                }
+    }catch (error) {
+        console.error('Erreur lors de la connexion sftp:', error);
+        throw createError({ statusCode: 500, statusMessage: 'Erreur lors de la connexion sftp' });
+    }finally{
+        sftp.close()
+    }
+    }); et 
+download.ts import fs from 'fs';
+import path from 'path';
+import archiver from 'archiver'
+import { SFTPClient } from '~/services/sftp.service';
+
+export default defineEventHandler(async (event) => {
+    const body = await readBody(event); //readBody pour obtenir le corps de la requête et Destructure le corps de la requête pour obtenir la liste des noms de fichiers
+    const { filenames } = body;
+
+    console.log("Filenames reçus:", filenames); // Log les noms de fichiers reçus
+
+    if (!Array.isArray(filenames) || filenames.length === 0) {
+        console.error("Aucun fichier sélectionné ou format incorrect");
+        throw createError({ statusCode: 400, statusMessage: 'Filenames nécessaire' });
+    }
+
+    const uploadDir = path.join(process.cwd(), 'tmp','uploads',);
+    const zipFilePath = path.join('tmp','zipfiles', 'fichier.zip');
+    const sftp = new SFTPClient()
+    try {
+       
+        await sftp.connect({ host: 'tpiiusa003' })
+
+        console.log("Création de l'archive...");
+        // Créer un fichier pour diffuser les données de l'archive.
+        const output = fs.createWriteStream(zipFilePath);
+        const archive = archiver('zip', {
+            zlib: { level: 9 } //niveau de compression.
+        });
+
+        // configure archiver pour écrire les données de l'archive dans le flux de sortie
+        archive.pipe(output);
+        
+        for (const filename of filenames) {
+            const file = uploadDir + '/' +filename.name 
+            let dst = fs.createWriteStream(file);
+            await sftp.downloadFile(filename.pathFull, dst )
+    
+            if (fs.existsSync(file)) {
+                console.log(`Ajout du fichier: ${filename.name}`);
+                archive.file(file, { name: filename.name });
+                dst.close()
+
+            } else {
+                console.warn(`Fichier non trouvé: ${filename.name}`);
+            }
+        }
+
+        await archive.finalize();
+        for (const filename of filenames) {
+            const file = uploadDir + '/' +filename.name 
+            if (fs.existsSync(file)) {
+                fs.rmSync(file)
+            }
+        }
+
+        console.log("Archivage finalisé.");
+
+        // Attendre que le flux de sortie soit fermé avant de lire le fichier ZIP
+        await new Promise((resolve, reject) => {
+            output.on('close', resolve);
+            output.on('error', reject);
+        });
+
+        console.log("Lecture du fichier ZIP généré...");
+        // Lire le fichier ZIP généré
+        const zipFile = await fs.promises.readFile(zipFilePath);
+        console.log("Fichier ZIP généré avec succès.");
+        return zipFile; // Retourner directement le fichier ZIP
+
+    } catch (error) {
+        console.error('Erreur lors de la création du fichier ZIP:', error);
+        throw createError({ statusCode: 500, statusMessage: 'Erreur lors de la création du fichier ZIP' });
+    }finally{
+        sftp.close()
+    }
+});
