@@ -22,31 +22,31 @@
         </div>
         <form id="info" class="row g-3" v-if="typePaiement !== 'portail'">
           <div class="col-md-6">
-            <input required class="form-control form-control-custom" type="text" name="exer" placeholder="Exercice">
+            <input required class="form-control form-control-custom" type="text" name="exer" placeholder="Exercice *" maxlength="4" size="4">
           </div>
           <div class="col-md-6">
-            <input required class="form-control form-control-custom" type="email" name="mel" placeholder="Mail">
+            <input required class="form-control form-control-custom" type="email" name="mel" placeholder="Mail *" minlength="6" maxlength="80" size="20">
           </div>
           <div class="col-md-6">
-            <input required class="form-control form-control-custom" type="text" name="montant" placeholder="Montant">
+            <input required class="form-control form-control-custom" type="text" name="montant" placeholder="Montant *" maxlength="7" size="7">
           </div>
           <div class="col-md-6">
-            <input required class="form-control form-control-custom" type="text" name="numcli" placeholder="Numéro de client">
+            <input required class="form-control form-control-custom" type="text" name="numcli" placeholder="Numéro de client *" maxlength="6" size="6">
           </div>
           <div class="col-md-6">
-            <input required class="form-control form-control-custom" type="text" name="objet" placeholder="Objet">
+            <input class="form-control form-control-custom" type="text" name="objet" placeholder="Objet" maxlength="100" size="20">
           </div>
           <div class="col-md-6">
-            <input required class="form-control form-control-custom" type="text" name="refdet" placeholder="Référence de la dette">
+            <input required class="form-control form-control-custom" type="text" name="refdet" placeholder="Référence de la dette *" minlength="6" maxlength="30" size="15">
           </div>
           <div class="col-md-6">
-            <input required class="form-control form-control-custom" type="text" name="saisie" placeholder="Saisie">
+            <input required class="form-control form-control-custom" type="text" name="saisie" placeholder="Saisie *" maxlength="1" size="1">
           </div>
           <div class="col-md-6">
-            <input required class="form-control form-control-custom" type="text" name="urlnotif" placeholder="Url de notification">
+            <input required class="form-control form-control-custom" type="text" name="urlnotif" placeholder="Url de notification *" maxlength="250" size="30">
           </div>
           <div class="col-md-6">
-            <input required class="form-control form-control-custom" type="text" name="urlredirect" placeholder="Url de redirection">
+            <input required class="form-control form-control-custom" type="text" name="urlredirect" placeholder="Url de redirection *" maxlength="250" size="30">
           </div>
           <div class="col-md-12 d-flex justify-content-end mt-3">
             <input class="btn btn-danger me-2" type="reset" value="Annuler">
@@ -60,14 +60,11 @@
   </div>
 </template>
 
-
 <script setup>
 import { ref, onMounted } from 'vue';
 
 const typePaiement = ref('soap');
 const title = ref();
-
-onChangeInfo();
 
 function onChangeInfo() {
   if (typePaiement.value === 'soap') {
@@ -80,6 +77,7 @@ function onChangeInfo() {
 }
 
 onMounted(() => {
+  onChangeInfo();
   const bubbles = document.querySelectorAll('.bubble');
   bubbles.forEach(bubble => {
     bubble.style.setProperty('--random-left', Math.random());
@@ -87,7 +85,6 @@ onMounted(() => {
 });
 
 async function paiement() {
-  // cas portail : une simple redirection vers Tipi ZU IIA
   if (typePaiement.value === 'portail') {
     window.open('http://10.156.13.98/tpi-zu/accueilportail.web', '_blank');
     return;
@@ -117,6 +114,7 @@ async function paiement() {
   }
 }
 </script>
+
 <style scoped>
 .bgg {
   background-color: #5b5b5b;
@@ -195,7 +193,6 @@ async function paiement() {
   animation-delay: 10s;
 }
 
-/* Définir des positions aléatoires pour les bulles */
 .bubble {
   left: calc(100% * var(--random-left));
 }
@@ -243,6 +240,20 @@ h1 {
   animation: inputFocus 0.5s ease-in-out;
 }
 
+.form-control-custom:valid {
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.form-control-custom:invalid {
+  animation: shake 0.5s;
+}
+
+.form-control-custom:invalid:focus{
+ border-color: #c9302c;
+ box-shadow: 0 0 0 0.2rem rgba(255, 3, 3, 0.25);
+
+}
 @keyframes inputFocus {
   0% {
     transform: scale(1);
@@ -252,6 +263,18 @@ h1 {
   }
   100% {
     transform: scale(1);
+  }
+}
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20%, 60% {
+    transform: translateX(-10px);
+  }
+  40%, 80% {
+    transform: translateX(10px);
   }
 }
 
