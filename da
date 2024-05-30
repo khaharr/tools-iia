@@ -1,0 +1,274 @@
+app.vue 
+  <script setup lang="ts">
+</script>
+
+<template>
+  <div :class="['vh-100', isDarkMode ? 'bgg-dark' : 'bgg-light']">
+    <Navbar></Navbar>
+    <NuxtPage id="bodyMain">
+    </NuxtPage>
+  </div>
+</template>
+
+<style>
+:root {
+  --background-color-day: #dfdad8;
+  --background-color-night: #121212;
+  --text-color-day: #000000;
+  --text-color-night: #ffffff;
+  --bs-pagination-active-border-color-day: #6c757d;
+  --bs-pagination-active-border-color-night: #adb5bd;
+  --bs-pagination-active-bg-day: #6c757d;
+  --bs-pagination-active-bg-night: #495057;
+  --bs-pagination-color-day: #6c757d;
+  --bs-pagination-color-night: #adb5bd;
+}
+
+body {
+  background-color: var(--background-color-day);
+  color: var(--text-color-day);
+}
+
+body.dark-mode {
+  background-color: var(--background-color-night);
+  color: var(--text-color-night);
+}
+
+.bgg-light {
+  background-color: var(--background-color-day);
+}
+
+.bgg-dark {
+  background-color: var(--background-color-night);
+}
+
+.card {
+  background-color: var(--background-color-day);
+  border: none;
+  border-radius: 20px;
+  box-shadow: 10px 5px 5px rgb(180, 180, 180);
+}
+
+body.dark-mode .card {
+  background-color: var(--background-color-night);
+  box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.5);
+}
+
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.2s;
+}
+
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+  filter: blur(1rem);
+}
+
+h1 {
+  font-size: 1.8rem;
+  color: var(--text-color-day);
+  font-weight: bold;
+}
+
+body.dark-mode h1 {
+  color: var(--text-color-night);
+}
+</style>
+
+  index.ts export const state = () => ({
+  isDarkMode: false
+});
+
+export const mutations = {
+  toggleDarkMode(state: any) {
+    state.isDarkMode = !state.isDarkMode;
+  }
+};
+
+export const getters = {
+  isDarkMode: (state: any) => state.isDarkMode
+};
+
+
+navbar.vue  
+  <template>
+  <nav :class="['navbar navbar-expand-lg', isDarkMode ? 'navbar-dark bg-dark' : 'navbar-light bg-light']">
+    <div class="container-fluid">
+      <NuxtLink class="navbar-brand li" to="/">Accueil</NuxtLink>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+              data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+              aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <NuxtLink class="nav-link" to="/dataset">Jeu de données</NuxtLink>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              Suivi de production
+            </a>
+            <ul class="dropdown-menu">
+              <li>
+                <NuxtLink class="dropdown-item" :to="{ name: 'suiviexploit-env', params: { env: 'tipi' } }">
+                  Tipi
+                </NuxtLink>
+              </li>
+              <li>
+                <NuxtLink class="dropdown-item" :to="{ name: 'suiviexploit-env', params: { env: 'tipi-client' } }">Tipi Client
+                </NuxtLink>
+              </li>
+              <li>
+                <NuxtLink class="dropdown-item" :to="{ name: 'suiviexploit-env', params: { env: 'payfip' } }">Payfip
+                </NuxtLink>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-item">
+            <NuxtLink class="nav-link" to="/paiement">Paiement</NuxtLink>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+              Les fichiers
+            </a>
+            <ul class="dropdown-menu">
+              <li>
+                <NuxtLink class="dropdown-item" to="/download">Télécharger</NuxtLink>
+              </li>
+              <li>
+                <NuxtLink class="dropdown-item" to="/upload">Déposer</NuxtLink>
+              </li>
+            </ul>
+          </li>
+        </ul>
+        <li class="nav-item">
+          <i class="bi" :class="[isDarkMode ? 'bi-sun-fill' : 'bi-moon-fill']" @click="toggleDarkMode"></i>
+        </li>
+      </div>
+    </div>
+  </nav>
+</template>
+
+<script setup lang="ts">
+import { useStore } from 'vuex';
+import { computed } from 'vue';
+
+const store = useStore();
+const isDarkMode = computed(() => store.getters.isDarkMode);
+
+const toggleDarkMode = () => {
+  store.commit('toggleDarkMode');
+  document.body.classList.toggle('dark-mode', isDarkMode.value);
+};
+</script>
+
+<style scoped>
+nav {
+  height: 60px;
+}
+li a {
+  border-radius: 50px;
+}
+li a:hover {
+  background-color: black;
+  color: rgb(244, 247, 247);
+  border-radius: 50px;
+}
+.li {
+  border-radius: 15px;
+}
+.li:hover {
+  background-color: black;
+  color: rgb(244, 247, 247);
+  border-radius: 15px;
+}
+</style>
+
+
+  app.vue <script setup lang="ts">
+import { useStore } from 'vuex';
+import { computed, watch } from 'vue';
+
+const store = useStore();
+const isDarkMode = computed(() => store.getters.isDarkMode);
+
+watch(isDarkMode, (newValue) => {
+  document.body.classList.toggle('dark-mode', newValue);
+});
+</script>
+
+<template>
+  <div :class="['vh-100', isDarkMode ? 'bgg-dark' : 'bgg-light']">
+    <Navbar></Navbar>
+    <NuxtPage id="bodyMain">
+    </NuxtPage>
+  </div>
+</template>
+
+<style>
+:root {
+  --background-color-day: #dfdad8;
+  --background-color-night: #121212;
+  --text-color-day: #000000;
+  --text-color-night: #ffffff;
+  --bs-pagination-active-border-color-day: #6c757d;
+  --bs-pagination-active-border-color-night: #adb5bd;
+  --bs-pagination-active-bg-day: #6c757d;
+  --bs-pagination-active-bg-night: #495057;
+  --bs-pagination-color-day: #6c757d;
+  --bs-pagination-color-night: #adb5bd;
+}
+
+body {
+  background-color: var(--background-color-day);
+  color: var(--text-color-day);
+}
+
+body.dark-mode {
+  background-color: var(--background-color-night);
+  color: var(--text-color-night);
+}
+
+.bgg-light {
+  background-color: var(--background-color-day);
+}
+
+.bgg-dark {
+  background-color: var(--background-color-night);
+}
+
+.card {
+  background-color: var(--background-color-day);
+  border: none;
+  border-radius: 20px;
+  box-shadow: 10px 5px 5px rgb(180, 180, 180);
+}
+
+body.dark-mode .card {
+  background-color: var(--background-color-night);
+  box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.5);
+}
+
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.2s;
+}
+
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+  filter: blur(1rem);
+}
+
+h1 {
+  font-size: 1.8rem;
+  color: var(--text-color-day);
+  font-weight: bold;
+}
+
+body.dark-mode h1 {
+  color: var(--text-color-night);
+}
+</style>
