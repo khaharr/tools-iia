@@ -1,203 +1,1237 @@
-import fs from 'fs';
-import path from 'path';
-import { SFTPClient } from '~/services/sftp.service';
+navbar.vue   <template>
+    <nav class="navbar navbar-expand-lg  fond ">
+        <div class="container-fluid">
+        <NuxtLink class="navbar-brand li" to="/">Accueil</NuxtLink>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+           
+            <div class="collapse navbar-collapse " id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    
+                    <li class="nav-item">
+                        <NuxtLink class="nav-link" to="/dataset">Jeu de données</NuxtLink>
+                    </li>
 
-export default defineEventHandler(async (event) => {
-  const formData = await readMultipartFormData(event);
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            Suivi de production
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <NuxtLink class="dropdown-item"
+                                    :to="{ name: 'suiviexploit-env', params: { env: 'tipi' } }">
+                                    Tipi</NuxtLink>
+                            </li>
+                            <li>
+                                <NuxtLink class="dropdown-item"
+                                    :to="{ name: 'suiviexploit-env', params: { env: 'tipi-client' } }">Tipi Client
+                                </NuxtLink>
+                            </li>
+                            <li>
+                                <NuxtLink class="dropdown-item"
+                                    :to="{ name: 'suiviexploit-env', params: { env: 'payfip' } }">Payfip</NuxtLink>
+                            </li>
 
-  if (!formData || formData.length === 0) {
-    return { message: 'Aucun fichier trouvé.', success: false, files: [] };
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <NuxtLink class="nav-link" to="/paiement">Paiement</NuxtLink>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            Les fichiers
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <NuxtLink class="dropdown-item" to="/download">Télécharger</NuxtLink>
+                            </li>
+                            <li>
+                                <NuxtLink class="dropdown-item" to="/upload">Déposer</NuxtLink>
+                            </li>
+                        </ul>
+                    </li>
+
+                  
+                </ul>
+                <li class="nav-item">
+                        <i class="bi bi-moon-fill"></i>
+                    </li>
+
+            </div>
+        </div>
+    </nav>
+
+</template>
+
+<script setup>
+</script>
+
+
+<style scoped>
+nav{
+    height: 60px;
+}
+li a{
+    border-radius: 50px;
+}
+li a:hover{
+    background-color: black;
+    color: rgb(244, 247, 247);
+    border-radius: 50px;
+}
+.li{
+    border-radius: 15px;
+}
+.li:hover {
+    background-color: black;
+    color: rgb(244, 247, 247);
+    border-radius: 15px;
+}
+</style> dataset.vue <script setup lang="ts">
+
+// import { type NitroFetchOptions } from '~/node_modules/nitropack/types'
+import { epsStructure } from '~/public/strutureTableEps'
+import { rnfStructure } from '~/public/strutureTableRnf'
+import { roleStructure } from '~/public/strutureTableRole'
+import { titreStructure } from '~/public/strutureTableTitre'
+
+
+type query = {
+  query: {
+    eps: string,
+    ifurl: string,
+    limit: number,
+
+  },
+  storage: string
+}
+
+const typeDataset = ref('rnf')
+const env = ref('tipi')
+const title = ref(`Environnement ${env.value.toUpperCase()} : Jeu de données [ ${typeDataset.value.toUpperCase()} ]`)
+const url = ref('')
+const eps = ref('')
+const action = ref('update')
+const error = ref()
+const limit = ref(50)
+
+onMounted(() => {
+  onChangeInfo()
+})
+
+function changeEnv() {
+  env.value = env.value === 'tipi' ? 'tipi-client' : 'tipi'
+  const upperEnv = env.value.toUpperCase()
+  const upperTypeDataset = typeDataset.value.toUpperCase()
+  title.value = `Environnement ${upperEnv} : Jeu de données [ ${upperTypeDataset} ] `
+  $('#table').bootstrapTable('destroy')
+}
+
+
+function onChangeInfo() {
+  const upperEnv = env.value.toUpperCase()
+  const upperTypeDataset = typeDataset.value.toUpperCase()
+  title.value = ` Environnement ${upperEnv} : Jeu de données [ ${upperTypeDataset} ] `
+  url.value = ''
+  eps.value = ''
+  $('#table').bootstrapTable('destroy')
+}
+
+function getQueryParam() {
+  const vquery: query = {
+    query: {
+      eps: eps.value ? 'avec' : '',
+      ifurl: url.value ? 'yes' : '',
+      limit: limit.value,
+
+    },
+    storage: ''
   }
-
-  // Fonction pour générer un nom de dossier aléatoire de 6 caractères
-  const generateRandomDirectoryName = () => {
-    return Math.random().toString(36).substring(2, 8);
-  };
-
-  // Créer un répertoire temporaire avec un nom aléatoire
-  const tempUploadDirectoryName = generateRandomDirectoryName();
-  const uploadsDirectory = path.join(process.cwd(), 'tmp', 'uploads', tempUploadDirectoryName);
-  const remoteFilePath = '/tmp/test';
-  const resultFiles: { name: string; success: boolean; error?: string; }[] = [];
-  const sftp = new SFTPClient();
-
+  vquery.storage = typeDataset.value + '_' + env.value + '_' + vquery.query.ifurl + '_' + vquery.query.eps
+  return vquery
+}
+function closeUpdate() {
+  action.value = "update"
+}
+async function update() {
+  if (action.value === "update") {
+    action.value = "dataset"
+    return
+  }
+  closeUpdate()
+  waitAnimation()
+  const path = `/api/dataset/${env.value}/update${typeDataset.value}`
+  const vquery = getQueryParam()
   try {
-    await sftp.connect({ host: 'tpiiusa003' });
+    await $fetch(path, ({ query: vquery.query }) as any)
+    localStorage.setItem(vquery.storage, '{}')
+    await refresh()
+  } catch {
+    console.log('ERROR')
+  }
+  hideWaitAnimation()
+}
 
-    // Créer le répertoire s'il n'existe pas
+async function refresh() {
+  const vquery = getQueryParam()
+  let value = localStorage.getItem(vquery.storage) || '{}'
+  let json = JSON.parse(value)
+  if (Object.keys(json).length === 0) {
+    waitAnimation()
+    const path = `/api/dataset/${env.value}/list${typeDataset.value}`
+
     try {
-      if (!fs.existsSync(uploadsDirectory)) {
-        fs.mkdirSync(uploadsDirectory, { recursive: true });
-      }
-    } catch (error) {
-      const errorMessage = `Erreur lors de la création du répertoire de destination "${uploadsDirectory}".`;
-      console.error(errorMessage, error);
-      return { message: errorMessage, success: false, files: resultFiles };
+      value = await $fetch(path, ({ query: vquery.query }) as any)
+      localStorage.setItem(vquery.storage, JSON.stringify(value))
     }
-
-    // Gestion d'erreur
-    try {
-      for (const file of formData) {
-        const fileBuffer: Buffer = file.data;
-        if (!file.filename) {
-          const errorMessage = 'Le nom du fichier est indéfini.';
-          console.error(errorMessage);
-          resultFiles.push({ name: 'Indéfini', success: false, error: errorMessage });
-          continue;
-        }
-
-        const filePath = path.join(uploadsDirectory, file.filename);
-
-        try {
-          fs.writeFileSync(filePath, fileBuffer);
-          await sftp.uploadFile(filePath, remoteFilePath);
-          resultFiles.push({ name: file.filename, success: true });
-        } catch (error) {
-          const errorMessage = `Erreur lors de l'enregistrement du fichier: ${file.filename}`;
-          console.error(errorMessage, error);
-          resultFiles.push({ name: file.filename, success: false, error: errorMessage });
-        }
-      }
-
-      return { message: 'Fichiers traités.', success: true, files: resultFiles };
-    } catch (error) {
-      console.error('Erreur lors de l\'enregistrement des fichiers :', error);
-      return { message: 'Erreur lors de l\'enregistrement des fichiers.', success: false, files: resultFiles };
-    }
-  } catch (error) {
-    console.error('Erreur lors de la connexion SFTP:', error);
-    throw createError({ statusCode: 500, statusMessage: 'Erreur lors de la connexion SFTP' });
-  } finally {
-    sftp.close();
-
-    // Supprimer le répertoire temporaire des uploads
-    try {
-      fs.rmSync(uploadsDirectory, { recursive: true, force: true });
-      console.log(`Répertoire temporaire supprimé : ${uploadsDirectory}`);
-    } catch (error) {
-      console.error(`Erreur lors de la suppression du répertoire temporaire : ${uploadsDirectory}`, error);
+    catch (e) {
+      error.value = e
     }
   }
+  json = localStorage.getItem(vquery.storage)
+  value = json ? JSON.parse(json) : []
+  createTable(typeDataset.value, value)
+  hideWaitAnimation()
+}
+
+
+const createTable = (name: string, data: any) => {
+  $('#table').bootstrapTable('destroy')
+  if (name == 'eps') {
+    $('#table').bootstrapTable({
+      columns: epsStructure.columns,
+      data: data
+    })
+  } else if (name == 'role') {
+    $('#table').bootstrapTable({
+      columns: roleStructure.columns,
+      data: data
+    })
+  } else if (name == 'titre') {
+    $('#table').bootstrapTable({
+      columns: titreStructure.columns,
+      data: data
+    })
+  } else {
+    $('#table').bootstrapTable({
+      columns: rnfStructure.columns,
+      data: data
+    })
+  }
+}
+
+// Fonction pour afficher l'animation d'attente
+function waitAnimation() {
+  $("#loading-animation").show();
+}
+
+// Fonction pour afficher l'animation d'attente
+function hideWaitAnimation() {
+  $("#loading-animation").hide();
+}
+</script>
+<template>
+<div class="bgg">
+  <!-- Élément pour l'animation d'attente -->
+  <div id="loading-animation">
+    <div class="loader"></div>
+  </div>
+
+  <div class="container m-auto mb-5  ">
+    <div class="form-container card p-3 rounded border border-dark mt-5 mx-auto">
+      <div class="alert alert-danger  " role="alert" v-if="error">
+        ERREUR : {{ error }}
+      </div>
+      <h1 class="text-center"> {{ title }}</h1>
+
+      <div class="d-flex justify-content-center">
+        <div class="form-check form-switch m-3">
+          <input @change="changeEnv" class="form-check-input" type="checkbox" id="env" checked value="{{ env }}">
+          <label class="form-check-label " for="env">{{ env.toUpperCase() }}</label>
+        </div>
+        <div class="form-check m-3">
+          <input @change='onChangeInfo' class="form-check-input" type="radio" name="radio" value="rnf"
+            v-model="typeDataset" id="radio1" checked>
+          <label class="form-check-label" for="radio1">
+            RNF
+          </label>
+        </div>
+        <div class="form-check  m-3">
+          <input @change='onChangeInfo' class="form-check-input" type="radio" name="radio" value="titre"
+            v-model="typeDataset" id="radio2">
+          <label class="form-check-label" for="radio2">
+            Titre
+          </label>
+        </div>
+        <div class="form-check m-3">
+          <input @change='onChangeInfo' class="form-check-input" type="radio" name="radio" value="role"
+            v-model="typeDataset" id="radio3">
+          <label class="form-check-label" for="radio3">
+            Rôle
+          </label>
+        </div>
+        <div class="form-check m-3">
+          <input @change='onChangeInfo' class="form-check-input" type="radio" name="radio" value="eps"
+            v-model="typeDataset" id="radio3">
+          <label class="form-check-label" for="radio3">
+            EPS
+          </label>
+        </div>
+      </div>
+      <div class="input-group w-50 mx-auto my-3" v-show="action === 'dataset'">
+        <label class="input-group-text" for="modalLimit">Nombre de ligne</label>
+        <select v-model="limit" id="modalLimit" class="form-select">
+          <option value="20">20</option>
+          <option value="50">50</option>
+          <option value="70">70</option>
+          <option value="100">100</option>
+        </select>
+      </div>
+      <div class="d-flex justify-content-center mb-3">
+        <div class="form-check m-3 col" v-if="typeDataset != 'rnf'">
+          <input class="form-check-input col" type="checkbox" value="avec" v-model='url' id='url'>
+          <label class="form-check-label" for="url">Si coché seulement les clients url</label>
+        </div>
+        <div class="form-check m-3 col" v-if="typeDataset == 'eps'">
+          <input class="form-check-input col" type="checkbox" value="yes" v-model='eps' id='eps'>
+          <label class="form-check-label" for="eps">Si coché avec malade</label>
+        </div>
+      </div>
+      <div class="d-flex justify-content-center">
+
+        <button type="button" v-show="action !== 'dataset'" class="btn btn-primary mx-3 col-2 "
+          @click="refresh">Afficher</button>
+        <button type="button" v-show="action === 'dataset'" class="btn btn-danger mx-3 col-2"
+          @click="closeUpdate">Annuler</button>
+        <button type="button" class="btn btn-success col-2" @click="update">Mettre à jour</button>
+      </div>
+
+    </div>
+  </div>
+  <div class="container my-3 text-center" v-if="typeDataset === 'rnf'">Pour les paiements des RNF, voici le numéro
+    client fictif à utiliser: 91524A </div>
+  <div class="p-5">
+    <table id="table" data-toggle="table" data-pagination="true" data-search="true" data-sortable="true"
+      data-show-export="true" data-show-columns="true" data-page-size="25"
+      data-export-types="[ 'csv', 'txt', 'excel', 'pdf']">
+    </table>
+  </div>
+
+
+
+
+
+</div>
+</template>
+
+<style scoped>
+.form-container {
+  /* background-color: rgb(255, 255, 255); */
+ 
+}
+
+body {
+  background-color: rgb(233, 233, 233);
+}
+
+/*Amination attente */
+#loading-animation {
+  display: none;
+  /* Le masquer par défaut */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  /* Fond semi-transparent pour un effet d'obscurcissement */
+  z-index: 9999;
+}
+
+.loader {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 2s linear infinite;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -20px;
+  margin-left: -20px;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+</style>
+app.vue <script setup lang="ts">
+
+</script>
+<template>
+  <div class="vh-100 bgg ">
+    <Navbar></Navbar>
+    <NuxtPage id="bodyMain">
+    </NuxtPage>
+  </div>
+
+</template>
+
+<style>
+* {
+  --bs-pagination-active-border-color:#6c757d !important;
+  --bs-pagination-active-bg: #6c757d!important;
+  --bs-pagination-color: #6c757d !important;
+  --colorBack: #dfdad8;
+}
+
+.card {
+  background-color:var(--colorBack);
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); */
+  box-shadow: 10px 5px 5px rgb(180, 180, 180);
+}
+
+
+.bgg {
+  background-color: var(--colorBack);
+  min-height: calc(100vh - 60px);
+  margin: 0;
+  padding: 0;
+}
+
+.page-enter-active,
+.page-leave-active {
+  transition: all 0.2s;
+}
+
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+  filter: blur(1rem);
+}
+
+h1 {
+  font-size: 1.8rem;
+  color: #333333;
+  font-weight: bold;
+}
+</style>
+paiement.vue <template>
+  <div class="bgg">
+    <div class="bubbles">
+      <div class="bubble" v-for="n in 20" :key="n"></div>
+    </div>
+    <div class="container footer-space">
+      <div class="payment-form-container card p-4 rounded shadow">
+        <h1 class="text-center mb-4 ">{{ title }}</h1>
+        <div class="d-flex justify-content-center mb-4">
+          <div class="form-check mx-2">
+            <input @change="onChangeInfo" class="form-check-input" type="radio" name="radio" value="soap"
+              v-model="typePaiement" id="radio1" checked>
+            <label class="form-check-label" for="radio1">Web service</label>
+          </div>
+          <div class="form-check mx-2">
+            <input @change="onChangeInfo" class="form-check-input" type="radio" name="radio" value="url"
+              v-model="typePaiement" id="radio2">
+            <label class="form-check-label" for="radio2">URL</label>
+          </div>
+          <div class="form-check mx-2">
+            <input @change="onChangeInfo" class="form-check-input" type="radio" name="radio" value="portail"
+              v-model="typePaiement" id="radio3">
+            <label class="form-check-label" for="radio3">Portail</label>
+          </div>
+        </div>
+        <div class="alert alert-danger  " role="alert" v-if="error">
+          ERREUR :<br />
+          - Type : {{ error.type }}<br />
+          - Code : {{ error.code }}<br />
+          - Descriptif : {{ error.descriptif }}<br />
+          - libelle : {{ error.libelle }} <br />
+          - Severite : {{ error.severite }}
+        </div>
+
+        <form id="info" class="row g-3" v-if="typePaiement !== 'portail'">
+          <div class="col-2 form-floating ">
+            <input required class="form-control form-control-custom" type="years" name="exer" placeholder="Exercice *"
+              minlength="4" maxlength="4" pattern="\d{4,4}" size="4">
+              <label for="exer">Exercice <span class="text-danger">*</span></label>          
+            </div>
+          
+          <div class="col-2 form-floating ">
+            <select class="form-select  form-select form-control-custom" name="saisie" id="saisie" required>
+              <option value="W">paiement réel ( W ) </option>
+              <option value="T">paiement test ( T )</option>
+              <option value="X">paiement d'activation ( X )</option>
+            </select>
+            <label for="exer">Saisie</label>
+          </div>
+          <div class="col-2 form-floating">
+            <input required class="form-control form-control-custom" type="text" name="numcli"
+              placeholder="Numéro de client *" maxlength="6" size="6">
+            <label for="numcli">Numéro de client <span class="text-danger">*</span></label>
+          </div>
+
+          <div class="col-md-3 form-floating">
+            <input required class="form-control form-control-custom" type="text" name="refdet"
+              placeholder="Référence de la dette *" minlength="6" maxlength="30" size="15">
+            <label for="refdet">Référence de la dette <span class="text-danger">*</span></label>
+
+          </div>
+
+
+          <div class="col-3 form-floating">
+            <input required class="form-control form-control-custom" type="text" name="montant" placeholder="Montant *"
+              maxlength="11" pattern="[0-9.]{2,12}" size="11">
+            <label for="montant">Montant <span class="text-danger">*</span></label>
+          </div>
+
+
+          <div class="col-md-6 form-floating">
+            <input class="form-control form-control-custom" type="text" name="objet" placeholder="Objet" maxlength="100"
+              value=" " size=" 20">
+            <label for="objet">objet</label>
+          </div>
+          <div class="col-6 form-floating">
+            <input required class="form-control form-control-custom" type="email" name="mel" placeholder="Mail *"
+              minlength="6" maxlength="80" size="20">
+            <label for="mel">Mail <span class="text-danger">*</span></label>
+          </div>
+
+
+          <div class="form-floating">
+            <input required class="form-control form-control-custom" type="text" name="urlnotif"
+              placeholder="Url de notification *" maxlength="250" size="30">
+            <label for="urlnotif">Url de notification <span class="text-danger">*</span></label>
+          </div>
+          <div class="form-floating">
+            <input required class="form-control form-control-custom" type="text" name="urlredirect"
+              placeholder="Url de redirection *" maxlength="250" size="30">
+            <label for="urlredirect">Url de redirection <span class="text-danger">*</span></label>
+          </div>
+
+        </form>
+
+        <div  v-if="typePaiement != 'portail'"  class="d-flex justify-content-end mt-2">
+          <p class="text-danger me-2">*</p> <p class="text-secondary"> Champ obligatoire</p>
+        </div>
+        <div class="d-flex justify-content-center mt-5">
+          <input type="submit" class="btn btn-secondary" @click="paiement" value="Création du paiement">
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+
+<script setup>
+import { ref, onMounted } from 'vue';
+// type tError = { [key in 'type' | 'code' | 'descriptif' | 'libelle' | 'severite']: string }
+const typePaiement = ref('soap');
+const title = ref();
+const error = ref();
+
+onChangeInfo();
+
+function onChangeInfo() {
+  if (typePaiement.value === 'soap') {
+    title.value = " Création d'un paiement par web service";
+  } else if (typePaiement.value === 'url') {
+    title.value = "Création d'un paiement par URL";
+  } else { title.value = "Redirection pour paiement par portail"; }
+}
+onMounted(() => {
+  const bubbles = document.querySelectorAll('.bubble');
+  bubbles.forEach(bubble => {
+    bubble.style.setProperty('--random-left', Math.random());
+  });
 });
 
-et 
-download.ts  
-import fs from 'fs';
-import path from 'path';
-import archiver from 'archiver';
-import { SFTPClient } from '~/services/sftp.service';
+async function paiement() {
+  // cas portail : une simple redirection vers Tipi ZU IIA
+  if (typePaiement.value === 'portail') {
+    window.open('http://10.156.13.98/tpi-zu/accueilportail.web', '_blank');
+    return;
+  }
 
-export default defineEventHandler(async (event) => {
-    const body = await readBody(event); // Lire le corps de la requête pour obtenir la liste des noms de fichiers
-    const { filenames } = body;
+  const formData = new FormData(document.getElementById('info'));
 
-    console.log("Filenames reçus:", filenames); // Log des noms de fichiers reçus
-
-    if (!Array.isArray(filenames) || filenames.length === 0) {
-        console.error("Aucun fichier sélectionné ou format incorrect");
-        throw createError({ statusCode: 400, statusMessage: 'Filenames nécessaire' });
+  if (typePaiement.value === 'soap') {
+    const data = {};
+    formData.forEach((value, key) => {
+      data[key] = value;
+    });
+    const { data: result } = await useFetch('/api/example/soap', { query: data });
+    if (result.value.status === 'ok') {
+      window.open(result.value.data.url, '_blank');
+    } else {
+      const rError = result.value.data.error;
+      const key = Object.keys(result.value.data.error)[0];
+      error.value = {
+        type: key,
+        code: rError[key].code ?? '',
+        descriptif: rError[key].descriptif ?? '',
+        libelle: rError[key].libelle ?? '',
+        severite: rError[key].severite ?? ''
+      }
     }
+  } else {
+    const query = new URLSearchParams();
+    formData.forEach((value, key) => {
+      query.set(key, value);
+    });
+    window.open(`http://10.156.13.98/tpi-zu/paiement.web?${query.toString()}`, '_blank');
+    console.log('ok');
+  }
+}
+</script>
+<style scoped>
+.bgg {
 
-    // Fonction pour générer un nom de dossier aléatoire de 6 caractères
-    const generateRandomDirectoryName = () => {
-        return Math.random().toString(36).substring(2, 8);
-    };
+  position: relative;
+  overflow: hidden;
+  padding: 130px;
+}
 
-    // Créer des répertoires temporaires avec des noms aléatoires
-    const tempUploadDirectoryName = generateRandomDirectoryName();
-    const uploadDir = path.join(process.cwd(), 'tmp', 'uploads', tempUploadDirectoryName);
+.bubbles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
 
-    const tempZipDirectoryName = generateRandomDirectoryName();
-    const zipDir = path.join(process.cwd(), 'tmp', 'zipfiles', tempZipDirectoryName);
-    const zipFilePath = path.join(zipDir, 'fichier.zip');
+.bubble {
+  position: absolute;
+  bottom: -150px;
+  width: 30px;
+  height: 30px;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  animation: rise 10s infinite ease-in-out, shimmer 2s infinite;
+  box-shadow: 0 0 10px rgb(0, 0, 0), 0 0 20px rgb(0, 0, 0), 0 0 30px rgb(0, 0, 0);
+}
 
-    const sftp = new SFTPClient();
+@keyframes rise {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    transform: translateY(-400px) scale(1.2);
+  }
+
+  75% {
+    transform: translateY(-800px) scale(1);
+
+  }
+
+  100% {
+    transform: translateY(-1400px) scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+
+.bubble:nth-child(2n) {
+  animation-duration: 12s;
+  animation-delay: 2s;
+}
+
+.bubble:nth-child(3n) {
+  animation-duration: 14s;
+  animation-delay: 4s;
+}
+
+.bubble:nth-child(4n) {
+  animation-duration: 16s;
+  animation-delay: 6s;
+}
+
+.bubble:nth-child(5n) {
+  animation-duration: 18s;
+  animation-delay: 8s;
+}
+
+.bubble:nth-child(6n) {
+  animation-duration: 20s;
+  animation-delay: 10s;
+}
+
+/* Définir des positions aléatoires pour les bulles */
+.bubble {
+  left: calc(100% * var(--random-left));
+}
+
+.payment-form-container {
+  /* background-color: #ffffff; */
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  z-index: 2;
+}
+
+/* .payment-form-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+} */
+
+
+
+
+
+.form-check-label {
+  margin-left: 5px;
+  color: #555555;
+}
+
+.form-control-custom {
+  border-radius: 5px;
+  border: 1px solid #cccccc;
+  /* padding: 0.75rem; */
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control-custom:focus {
+  border-color: #0056b3;
+  box-shadow: 0 0 0 0.2rem rgba(0, 86, 179, 0.25);
+  animation: inputFocus 0.5s ease-in-out;
+}
+
+.form-control-custom:valid {
+  border-color: #28a745;
+  box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+}
+
+.form-control-custom:invalid {
+  animation: shake 0.5s;
+
+}
+
+ .form-control-custom:invalid:focus {
+  border-color: #c9302c;
+  box-shadow: 0 0 0 0.2rem rgba(255, 3, 3, 0.25);
+
+} 
+
+@keyframes inputFocus {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20%,
+  60% {
+    transform: translateX(-10px);
+  }
+
+  40%,
+  80% {
+    transform: translateX(10px);
+  }
+}
+
+</style>  upload.vue <template>
+  <div class="bgg ">
+    <div class="container ">
+      <h1 class=" d-flex justify-content-center ">Déposer des fichiers</h1>
+
+      <div class="alert alert-danger  " role="alert" v-if="erreur">
+        <p>{{ erreur }}</p>
+      </div>
+      <div class="row mt-4  d-flex justify-content-center ">
+        <div class="col-md-6 ">
+          <div class="card ">
+            <div class="card-body ">
+              <h5 class="card-title">Sélectionner les fichiers à déposer</h5>
+
+              <input type="file" class="form-control" id="inputGroupFile01" multiple @change="uploadFiles"
+                accept=".jpg, .jpeg, .png,.doc,.docx,.xml,.pdf,.org,.csv,.sql,.txt,.tar.gz,.tar,.doc,.docx,.xls,.xlsx,.mp3,.mp4,html,.json," />
+
+              <div class="mt-3">
+                <label for="categorySelect" class="form-label">Choisir la catégorie :</label>
+                <select class="form-select" id="categorySelect" v-model="selectedCategory">
+                  <option value="">Sélectionner une catégorie</option>
+                  <option v-for="category in categories" :value="category" :key="category">{{ category }}</option>
+                </select>
+              </div>
+              <div class="d-flex justify-content-center ">
+                <button class="btn btn-secondary mt-3 " @click="uploadFiles">Déposer les fichiers</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card mt-3" v-if="depositedFiles.length > 0">
+            <div class="card-body shadow">
+              <h3 class="card-title ">Fichiers déposés</h3>
+              <div class="row mt-4 ">
+                <div v-for="(file, index) in depositedFiles" :key="index" class="col-6 mb-3 ">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h6>
+                        {{ file.name }}
+                        <button class="btn btn-danger btn-sm" @click="removeFile(index)"> <i class="bi bi-trash"></i>
+                        </button>
+
+                      </h6>
+                      <span class="badge bg-secondary">{{ file.category }}</span>
+
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="d-flex justify-content-center">
+                <button class="btn btn-success mt-3" @click="sendFilesToServer">Envoyer les fichiers</button>
+              </div>
+
+              <div class="mt-4">
+                <div class="progress" role="progressbar" aria-label="Animated striped example" aria-valuenow="0"
+                  aria-valuemin="0" aria-valuemax="100">
+                  <div class="progress-bar progress-bar-striped progress-bar-animated" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4" v-if="fileStatuses.length > 0">
+            <h3>Statuts des fichiers envoyés</h3>
+            <div class="alert alert-success  " role="alert" v-if="success">
+                    <p>{{ success }}</p>
+                </div>
+            <ul class="list-group">
+              <li v-for="(status, index) in fileStatuses" :key="index"
+                :class="{ 'list-group-item-success': status.success, 'list-group-item-danger': !status.success }"
+                class="list-group-item d-flex justify-content-between align-items-center">
+                
+                {{ status.name }}
+                <span v-if="status.success" class="badge bg-success">✔️</span>
+                <span v-else class="badge bg-danger">❌ {{ status.error }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+
+
+    </div>
+  </div>
+</template>
+<script setup lang="ts">
+type tStatus = { name: string; success: boolean; error?: string }
+type tFile = { name: string; category: string; file: File }
+
+const categories = ref<string[]>(["Catégorie 1", "Catégorie 2", "Catégorie 3"]);
+const selectedCategory = ref<string>('');
+const depositedFiles = ref<tFile[]>([]);
+const fileStatuses = ref<tStatus[]>([]);
+const erreur = ref()
+const success = ref()
+
+
+const uploadFiles = () => {
+  if (selectedCategory.value === "") {
+     erreur.value = "Veuillez sélectionner une catégorie."
+     
+    return;
+    
+  }
+  erreur.value =""
+  fileStatuses.value = []; // Reset status
+  const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+  const files = Array.from(input.files as FileList);
+  if (files.length === 0) {
+    erreur.value = "Veuillez sélectionner au moins un fichier."
+    return;
+  }
+  erreur.value=""
+
+  console.log('ttt')
+  files.forEach((file) => {
+    depositedFiles.value.push({ name: file.name, category: selectedCategory.value, file });
+  });
+
+  input.value = "";
+};
+
+const removeFile = (index: number) => {
+  depositedFiles.value.splice(index, 1);
+};
+
+const sendFilesToServer = async () => {
+  const progressBar = document.querySelector(".progress-bar") as HTMLElement;
+  fileStatuses.value = []; // Reset status
+
+  let totalSize = 0;
+  let uploadedSize = 0;
+
+  depositedFiles.value.forEach((file: { file: { size: number; }; }) => {
+    totalSize += file.file.size;
+  });
+
+  for (const file of depositedFiles.value) {
+    const formData = new FormData();
+    formData.append("file", file.file);
 
     try {
-        await sftp.connect({ host: 'tpiiusa003' });
+      const response = await fetch("/api/file/tipi/upload/depot", {
+        method: "POST",
+        body: formData,
+      });
 
-        // Créer les répertoires nécessaires s'ils n'existent pas
-        try {
-            if (!fs.existsSync(uploadDir)) {
-                fs.mkdirSync(uploadDir, { recursive: true });
-            }
-            if (!fs.existsSync(zipDir)) {
-                fs.mkdirSync(zipDir, { recursive: true });
-            }
-        } catch (error) {
-            const errorMessage = `Erreur lors de la création des répertoires nécessaires.`;
-            console.error(errorMessage, error);
-            throw createError({ statusCode: 500, statusMessage: errorMessage });
-        }
+      const responseData = await response.json();
 
-        console.log("Création de l'archive...");
-        // Créer un fichier pour diffuser les données de l'archive.
-        const output = fs.createWriteStream(zipFilePath);
-        const archive = archiver('zip', {
-            zlib: { level: 9 } // Niveau de compression.
-        });
+      if (!response.ok || !responseData.success) {
+        throw new Error(responseData.message || 'Erreur inconnue');
+      }
 
-        // Configure archiver pour écrire les données de l'archive dans le flux de sortie
-        archive.pipe(output);
+      uploadedSize += file.file.size;
+      const progress = (uploadedSize / totalSize) * 100;
+      progressBar.style.width = `${progress}%`;
+      progressBar.setAttribute("aria-valuenow", progress.toString());
 
-        for (const filename of filenames) {
-            const file = path.join(uploadDir, filename.name);
-            const dst = fs.createWriteStream(file);
-            await sftp.downloadFile(filename.pathFull, dst);
-
-            if (fs.existsSync(file)) {
-                console.log(`Ajout du fichier: ${filename.name}`);
-                archive.file(file, { name: filename.name });
-                dst.close();
-            } else {
-                console.warn(`Fichier non trouvé: ${filename.name}`);
-            }
-        }
-
-        await archive.finalize();
-
-        // Supprimer les fichiers téléchargés
-        for (const filename of filenames) {
-            const file = path.join(uploadDir, filename.name);
-            if (fs.existsSync(file)) {
-                fs.rmSync(file);
-            }
-        }
-
-        console.log("Archivage finalisé.");
-
-        // Attendre que le flux de sortie soit fermé avant de lire le fichier ZIP
-        await new Promise((resolve, reject) => {
-            output.on('close', resolve);
-            output.on('error', reject);
-        });
-
-        console.log("Lecture du fichier ZIP généré...");
-        // Lire le fichier ZIP généré
-        const zipFile = await fs.promises.readFile(zipFilePath);
-        console.log("Fichier ZIP généré avec succès.");
-        return zipFile; // Retourner directement le fichier ZIP
-
+      fileStatuses.value.push({
+        name: file.name,
+        success: true,
+      });
     } catch (error) {
-        console.error('Erreur lors de la création du fichier ZIP:', error);
-        throw createError({ statusCode: 500, statusMessage: 'Erreur lors de la création du fichier ZIP' });
-    } finally {
-        sftp.close();
+      console.error("Erreur lors de l'envoi des fichiers:", error);
+      fileStatuses.value.push({
+        name: file.name,
+        success: false,
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  }
 
-        // Supprimer le répertoire temporaire des uploads
-        try {
-            fs.rmSync(uploadDir, { recursive: true, force: true });
-            console.log(`Répertoire temporaire supprimé : ${uploadDir}`);
-        } catch (error) {
-            console.error(`Erreur lors de la suppression du répertoire temporaire des uploads : ${uploadDir}`, error);
-        }
+  //  une seconde pour s'assurer que la barre de progression atteint 100%
+  setTimeout(() => {
+    if (fileStatuses.value.every((status: { success: any; }) => status.success)) {
+      success.value = "Fichiers envoyé avec succés"
+    } else {
+      erreur.value = "Certains fichiers n'ont pas été envoyés correctement"
+    }
+  
+    depositedFiles.value = [];
+    progressBar.style.width = '0%'; // Réinitialiser la barre de progression
+  } , 1000); // Délai de 1 seconde avant d'afficher l'alerte
+};
 
-        // Supprimer le répertoire temporaire des zipfiles
-        try {
-            fs.rmSync(zipDir, { recursive: true, force: true });
-            console.log(`Répertoire temporaire supprimé : ${zipDir}`);
-        } catch (error) {
-            console.error(`Erreur lors de la suppression du répertoire temporaire des zipfiles : ${zipDir}`, error);
+
+
+</script>
+
+
+<style scoped>
+/* .card {
+  background-color:red;
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+} */
+
+/* .card-body {
+  padding: 1.5rem;
+  transition: transform 250ms;
+} */
+
+.card-body h6 {
+  display: flex;
+
+  justify-content: space-between;
+  align-items: center;
+}
+
+/*.card-body h6 button {
+  margin-left: 10px;
+} */
+
+.badge {
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 50px;
+  background-color: #337ab7;
+  color: #fff;
+}
+</style>  donload.vue <template>
+    <div class="bgg ">
+        <h1 class="text-center">Téléchargement de fichiers</h1>
+        <div class="shadow-lg rounded-3 p-4 my-3 mx-auto w-75">
+            <h4 class="d-flex justify-content-center">Filtre de recherche <i class="bi bi-search ms-2"></i></h4>
+            <div class="row justify-content-center">
+                <div class="col-2">
+                    <label for="dateFrom" class="form-label  mb-2">Date de début :</label>
+                    <input type="date" class="form-control" id="dateFrom" v-model="dateFrom"
+                        @change="applyDateFilter" />
+                </div>
+                <div class="col-2">
+                    <label for="dateTo" class="form-label mb-2">Date de fin :</label>
+                    <input type="date" class="form-control" id="dateTo" v-model="dateTo" @change="applyDateFilter" />
+                </div>
+                <div class="col-2">
+                    <label class="form-label mb-2">Nom du fichier :</label>
+                    <input type="text" id="customSearch" class="form-control" placeholder="rechercher" />
+                </div>
+                <div class="col-2" id="filter">
+                    <label class="form-label mb-2">Catégorie :</label>
+                    <select class="form-control bootstrap-table-filter-control-category">
+                        <option value="">Afficher tout</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="w-75 m-auto">
+            <table id="table" data-filter-control-container="#filter" data-toggle="table" data-pagination="true"
+                data-search="true" data-filter-control="true" data-search-highlight="true" data-click-to-select="true"
+                data-search-selector="#customSearch">
+                <thead>
+                    <tr>
+                        <th data-checkbox="true" data-field="check"></th>
+                        <!-- <th data-field="id" data-searchable="false">ID</th> -->
+                        <th data-field="nomfichier" data-sortable="true" data-searchable="true"
+                            data-click-to-select="true">Nom fichier
+                        </th>
+                        <th data-field="category" data-sortable="true" data-filter-control="select">Catégorie</th>
+                        <th data-field="date" data-searchable="false">Date mise en ligne</th>
+                        <th data-field="pathFull" data-searchable="false" data-filter-control="select">lien</th>
+                    </tr>
+                </thead>
+            </table>
+            <div class="text-center mb-4 d-flex justify-content-center">
+                <button class="btn btn-secondary validerCouleur " @click="generateFile" type="button"
+                    data-dismiss="alert">
+                    Générer Fichiers
+                </button>
+            </div>
+            <div v-if="errorMessage" class="alert alert-danger" role="alert">
+                {{ errorMessage }}
+            </div>
+        </div>
+    </div>
+</template>
+
+<script setup lang="ts">
+
+// Interface pour les items
+interface Item {
+    id: number;
+    nomfichier: string;
+    category: string;
+    date: string;
+    pathFull: string;
+}
+
+const items: Ref<Item[]> = ref([]);
+const dateFrom: Ref<string | null> = ref(null);
+const dateTo: Ref<string | null> = ref(null);
+const errorMessage: Ref<string | null> = ref(null);
+
+
+onMounted(async () => {
+    try {
+        const data: any[] = await $fetch('/api/file/tipi/download/listfile');
+        if (data.length > 0) {
+            items.value = data
+            data.map((el) => el.date = new Intl.DateTimeFormat('fr-FR', {
+                year: "numeric",
+                month: "numeric",
+                day: "numeric",
+                hour: 'numeric',
+                minute: 'numeric',
+                second: 'numeric',
+                timeZone: 'GMT'
+            }).format(el.date)
+
+            )
+            // $('#table').bootstrapTable('destroy');
+
+            $('#table').bootstrapTable('load', data);
+
         }
+    } catch (error: any) {
+        errorMessage.value = 'Erreur lors de la récupération des données. Veuillez réessayer plus tard. ' + error.message;
     }
 });
+
+const applyDateFilter = () => {
+    console.log('ok', items.value)
+    const table = $('#table');
+    table.bootstrapTable('load', items.value);
+    table.bootstrapTable(
+        'filterBy',
+        {},
+        {
+            filterAlgorithm: function (row: { date: string | number | Date; }, filters: any) {
+                const day = row.date.toString().slice(0, 2)
+                const month = row.date.toString().slice(3, 5) + '/'
+                const year = row.date.toString().slice(6, 10)
+                const itemDate = new Date(year + '/' + month + '/' + day);
+                const fromDate = dateFrom.value ? new Date(dateFrom.value) : undefined;
+                const toDate = dateTo.value ? new Date(dateTo.value) : undefined;
+
+
+                if (fromDate && toDate) {
+                    return itemDate >= fromDate && itemDate <= toDate;
+                }
+                else if (!fromDate && toDate) {
+                    return itemDate <= toDate;
+                }
+                else if (fromDate && !toDate) {
+                    return itemDate >= fromDate;
+                }
+
+                return true
+            }
+        }
+    );
+};
+
+const generateFile = async () => {
+    try {
+        const selectedRows: any = $('#table').bootstrapTable('getSelections');
+        if (selectedRows.length === 0) {
+            alert('Veuillez sélectionner au moins un fichier.');
+            return;
+        }
+        console.log(selectedRows)
+        const filenames = selectedRows.map((row: any) => {
+            return { name: row.nomfichier, pathFull: row.pathFull }
+        });
+
+        const response = await fetch('/api/file/tipi/download/download', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ filenames }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.statusMessage || 'Erreur lors du téléchargement des fichiers.');
+        }
+
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'FichiersPaiement.zip';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+    } catch (error: any) {
+        console.error('Erreur lors de la génération du fichier ZIP:', error.message);
+        errorMessage.value = 'Erreur lors de la génération du fichier ZIP. ' + error.message;
+    }
+};
+</script>
+
+<style lang="scss" scoped>
+// .tbl-filters {
+//     // margin: 20px auto;
+//     // padding: 20px;
+//     // background-color: #ddd0c8;
+//     // width: 70vw;
+//     // border-radius: 10px;
+//     // box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+// }
+
+// .form-row {
+//     margin-bottom: 20px;
+// }
+
+// .form-label {
+//     margin-bottom: 10px;
+// }
+
+// .form-control {
+//     height: calc(1.5em + 0.75rem + 2px);
+//     // padding: 0.375rem 0.75rem;
+//     font-size: 0.875rem;
+//     line-height: 1.5;
+// }
+
+// .table {
+//     background-color: rgb(231, 231, 231);
+// }
+
+// .filter-title {
+//     color: rgb(0, 0, 0);
+//     animation: slide-in 0.5s ease-in-out;
+
+//     .bi-search {
+//         margin-left: 5px;
+//     }
+// }
+
+// h1 {
+//     //     font-size: 32px;
+//     //     font-family: Arial, Helvetica, sans-serif;
+//     //     color: rgb(0, 0, 0);
+//     //     padding: 16px;
+//     //     font-weight: lighter;
+//     //     box-shadow: 2px 2px 6px #9e9e9e;
+//          text-align: center;
+//     //     display: block;
+//     //     border-radius: 20px;
+// }
+
+// .fixer {
+//     position: fixed;
+
+// }
+
+// .bgg {
+//     background-color: #ddd0c8;
+//     min-height: 93.8vh;
+//     margin: 0;
+//     padding: 0;
+// }</style>
